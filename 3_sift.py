@@ -6,7 +6,7 @@ import cv2 as cv
 # https://www.pyimagesearch.com/2018/09/19/pip-install-opencv/
 # https://aishack.in/tutorials/sift-scale-invariant-feature-transform-features/
 # https://stackoverflow.com/questions/29133085/what-are-keypoints-in-image-processing
-image = cv.imread("OpenCV-Python Tutorials/home.jpg")
+image = cv.imread("home.jpg")
 gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
 
 sift = cv.xfeatures2d_SIFT.create()
