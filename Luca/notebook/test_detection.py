@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from ..vcsp.detection import detect_painting
+from Luca.vcsp.detection import detect_painting
 
 
 def main():
