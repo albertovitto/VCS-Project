@@ -11,7 +11,7 @@ def main():
     #video_name = "GOPR2051.MP4"
     #video_name = "IMG_3803.MOV"
 
-        video_path = "../../%s" % video_name
+    video_path = "../../%s" % video_name
     video = cv2.VideoCapture(video_path)
 
     if not video.isOpened():
