@@ -22,12 +22,21 @@ if __name__ == '__main__':
         if ret and (frame_skip == 0 or i % frame_skip == 0):
             cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
             cv2.resizeWindow("Frame", 1280, 720)
-            cv2.imshow("Frame", get_bb(frame))
+            output_frame, rects = get_bb(frame)
+            cv2.imshow("Frame", output_frame)
             key = cv2.waitKey(1)
             if key == ord('q'):
                 break
             if key == ord('p'):
+                for i, r in enumerate(rects):
+                    x, y, w, h = r
+                    window_name = "Detection #%d" % i
+                    roi = frame[y:y + h, x:x + w]
+                    cv2.imshow(window_name, roi)
+                    cv2.imwrite("roi/out%d.jpg" % i, roi)
                 cv2.waitKey(-1)
+                cv2.destroyAllWindows()
+
         if ret is False:
             break
 

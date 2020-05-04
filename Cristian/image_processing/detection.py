@@ -35,16 +35,16 @@ def get_bb(img):
             # cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
         rects = remove_duplicated(rects)
-
+        frame = np.ndarray.copy(img)
         for i, r in enumerate(rects):
             x, y, w, h = r
 
-            cv2.drawContours(img, [c], 0, (0, 0, 255), 2)
-            cv2.drawContours(img, [hull], 0, (0, 0, 255), 2)
-            cv2.drawContours(img, [contour_poly], 0, (0, 255, 0), 2)
-            cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            # cv2.drawContours(frame, [c], 0, (0, 0, 255), 2)
+            # cv2.drawContours(frame, [hull], 0, (0, 0, 255), 2)
+            # cv2.drawContours(frame, [contour_poly], 0, (0, 255, 0), 2)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
 
     hstack1 = horizontal_stack(filtered, th)
-    hstack2 = horizontal_stack(morph, img)
+    hstack2 = horizontal_stack(morph, frame)
     vstack = vertical_stack(hstack1, hstack2)
-    return vstack
+    return vstack, rects
