@@ -130,5 +130,4 @@ dmypy.json
 .vscode/
 .idea/
 dataset/
-*.png
-*.jpg
+Alberto/images
