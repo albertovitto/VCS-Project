@@ -15,7 +15,7 @@ def main():
     # video_path = "dataset/videos/003/GOPR1940.MP4"
     # video_path = "dataset/videos/005/GOPR2043.MP4"
     # video_path = "dataset/videos/003/GOPR1940.MP4"
-    # video_path = "dataset/videos/011/3.mp4"
+    # video_path = "dataset/videos/011/3.mp4" #f
     image = cv2.imread(
         "Alberto/Detection refinement #0_screenshot_07.05.2020.png", cv2.IMREAD_GRAYSCALE)
     show, warped = test_rectify(image)
