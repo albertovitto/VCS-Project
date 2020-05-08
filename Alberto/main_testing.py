@@ -18,17 +18,21 @@ def painting_detection(frame):
     gray_bw = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     gray_rgb = cv2.cvtColor(gray_bw, cv2.COLOR_GRAY2BGR)
 
+    denoised = cv2.fastNlMeansDenoising(
+        gray_bw, h=7, templateWindowSize=7, searchWindowSize=3)
+
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     equalized = clahe.apply(gray_bw)
-    denoised = cv2.fastNlMeansDenoising(
-        equalized, h=7, templateWindowSize=7, searchWindowSize=3)
+
     adap_th = cv2.adaptiveThreshold(
         equalized, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 45, 5
     )
 
+    adap_th = cv2.medianBlur(adap_th, 3)
+
     kernel = np.ones((3, 3), np.uint8)
-    erosion = cv2.erode(adap_th, kernel, iterations=2)
-    dilation = cv2.dilate(erosion, kernel, iterations=9)
+    erosion = cv2.erode(adap_th, kernel, iterations=1)
+    dilation = cv2.dilate(erosion, kernel, iterations=4)
 
     _, contours, hierarchy = cv2.findContours(
         dilation, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -36,17 +40,18 @@ def painting_detection(frame):
     gray_bw_cnt = gray_bw.copy()
 
     for i, contour in enumerate(contours):
-        #x, y, w, h = cv2.boundingRect(contour)
+        x, y, w, h = cv2.boundingRect(contour)
         epsilon = 0.05 * cv2.arcLength(contour, True)
         approx = cv2.approxPolyDP(contour, epsilon, True)
-        rect = cv2.minAreaRect(contour)
-        box = cv2.boxPoints(rect)
-        box = np.int0(box)
-        if len(approx) == 4 and cv2.contourArea(approx) > 20000:
-            cv2.drawContours(gray_bw_cnt, [box], -1, (0, 255, 0), 10)
-        # if len(approx) == 4 and cv2.isContourConvex(approx) and cv2.contourArea(approx) > 50000:
-        #     #cv2.rectangle(gray_bw_cnt, (x, y), (x+w, y+h), (0, 255, 0), 10)
-        #     cv2.drawContours(gray_bw_cnt, [approx], -1, (0, 255, 0), 10)
+        # rect = cv2.minAreaRect(contour)
+        # box = cv2.boxPoints(rect)
+        # box = np.int0(box)
+        if len(approx) == 4 and cv2.isContourConvex(approx) and cv2.contourArea(approx) > 20000:
+            cv2.rectangle(gray_bw_cnt, (x, y), (x+w, y+h), (0, 255, 0), 10)
+            #cv2.drawContours(gray_bw_cnt, [approx], -1, (0, 255, 0), 10)
+        # if len(approx) == 4 and cv2.isContourConvex(approx) and cv2.contourArea(approx) > 10000:
+        #     cv2.rectangle(gray_bw_cnt, (x, y), (x+w, y+h), (0, 255, 0), 10)
+            #     cv2.drawContours(gray_bw_cnt, [approx], -1, (0, 255, 0), 10)
 
     a = np.hstack((gray_bw, equalized, denoised))
     b = np.hstack((erosion, dilation, gray_bw_cnt))
