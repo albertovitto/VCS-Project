@@ -3,6 +3,7 @@ import cv2
 import copy
 from Luca.vcsp.painting_detection.utils import auto_alpha_beta, is_painting, get_roi
 from Luca.vcsp.utils import multiple_show
+from Luca.vcsp.painting_detection.constants import MIN_HULL_AREA_PERCENT
 
 
 def get_bb(img, include_steps=False):
@@ -28,6 +29,7 @@ def get_bb(img, include_steps=False):
     if len(contours) != 0:
         candidate_bounding_boxes = []
         candidate_hulls = []
+        candidate_polys = []
         found = []
 
         for i, c in enumerate(contours):
@@ -38,9 +40,13 @@ def get_bb(img, include_steps=False):
             rotated_box = cv2.boxPoints(rotated_box)
             rotated_box = np.int0(rotated_box)
             bounding_box = cv2.boundingRect(hull)
+            ellipse = None
+            if len(hull) > 5:
+                ellipse = cv2.fitEllipse(hull)
 
-            if is_painting(hull, poly, bounding_box, rotated_box, img):
+            if is_painting(hull, poly, bounding_box, rotated_box, ellipse, img):
                 candidate_hulls.append(hull)
+                candidate_polys.append(poly)
                 candidate_bounding_boxes.append(bounding_box)
 
         if len(candidate_hulls) != 0:
@@ -54,7 +60,7 @@ def get_bb(img, include_steps=False):
             img_percent = x * img_area + y
             for i, c in enumerate(candidate_hulls):
                 hull_area = cv2.contourArea(candidate_hulls[i])
-                if hull_area < max_hull_area * 0.05 or hull_area < img_area * img_percent:
+                if hull_area < max_hull_area * MIN_HULL_AREA_PERCENT or hull_area < img_area * img_percent:
                     continue
                 else:
                     found.append(i)
@@ -63,6 +69,9 @@ def get_bb(img, include_steps=False):
             for i, index in enumerate(found):
                 x, y, w, h = candidate_bounding_boxes[index]
 
+                if include_steps:
+                    cv2.drawContours(output, [candidate_hulls[index]], 0, (0, 0, 255), 2)
+                    cv2.drawContours(output, [candidate_polys[index]], 0, (0, 255, 0), 2)
                 cv2.rectangle(output, (x, y), (x + w, y + h), (255, 0, 0), 2)
                 cv2.putText(output, "{}".format(i), (x + 5, y + 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3, False)
 

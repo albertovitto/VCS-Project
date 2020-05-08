@@ -37,7 +37,7 @@ if __name__ == '__main__':
                 break
             if key == ord('p'):  # pause
                 cv2.waitKey(-1)
-            if key == ord('r'):  # show rois
+            if key == ord('r'):  # show rectified rois
                 for i, roi in enumerate(rois):
                     rect_roi = rectify(roi, include_steps=False)
                     cv2.imshow("Rectified roi {}".format(i), rect_roi)
