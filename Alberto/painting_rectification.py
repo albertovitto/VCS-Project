@@ -40,7 +40,7 @@ def painting_rectification(image):
     # TODO: handling additional polygons
     if not found:
         print('Could not find bounding box of 4 points')
-        return [], box
+        return [], image
 
     box = box.reshape(4, 2)
     approx_box = np.zeros((4, 2), dtype="float32")
