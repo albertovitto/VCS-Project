@@ -121,13 +121,18 @@ def retrieve_img_brute_force(roi):
     cv2.waitKey(-1)
 
 
+def extract_features(path, bowDiction, sift):
+    image = cv2.imread(path)
+    return bowDiction.compute(image, sift.detect(image))
+
+
 def get_BOW():
     # https://github.com/briansrls/SIFTBOW/blob/master/SIFTBOW.py
     sift = cv2.xfeatures2d_SIFT.create()
     descriptors_unclustered = []
     dictionarySize = 5
     BOW = cv2.BOWKMeansTrainer(dictionarySize)
-    for i in range(10):
+    for i in range(95):
         filename = "{:03d}.png".format(i)
         image = cv2.imread("../../dataset/paintings_db/{}".format(filename))
         print("Processing " + filename)
@@ -136,25 +141,61 @@ def get_BOW():
 
     dictionary = BOW.cluster()
 
-    FLANN_INDEX_KDTREE = 1
-    index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
-    search_params = dict(checks=50)
-    flann = cv2.FlannBasedMatcher(index_params, search_params)
-    sift2 = cv2.xfeatures2d.SIFT_create()
-    bowDiction = cv2.BOWImgDescriptorExtractor(sift2, cv2.BFMatcher(cv2.NORM_L2))
-    bowDiction.setVocabulary(dictionary)
-    print("bow dictionary: {}".format(np.shape(dictionary)))
+    return dictionary
 
-    # TODO: go on...
+    return bowDiction
+
+
+def get_features_db(bowDiction, sift):
+    train_desc = []
+    train_labels = []
+    for i in range(95):
+        filename = "{:03d}.png".format(i)
+        print("Extracting features for " + filename)
+        path = "../../dataset/paintings_db/{}".format(filename)
+        train_desc.extend(extract_features(path, bowDiction, sift))
+        train_labels.append(i)
+    return train_desc, train_labels
 
 
 if __name__ == '__main__':
     roi = cv2.imread('../roi/out4.jpg')
     img = cv2.imread('../../dataset/paintings_db/076.png')
+
     # roi = cv2.imread('../roi/out1.jpg')
     # img = cv2.imread('../../dataset/paintings_db/021.png')
+
     # roi = cv2.imread('../roi/out0.jpg')
     # img = cv2.imread('../../dataset/paintings_db/045.png')
+
     sift_feature_matching_and_homography(roi, img)
+
     # retrieve_img_brute_force(roi)
-    # get_BOW()
+        
+    sift = cv2.xfeatures2d.SIFT_create()
+    # dictionary = get_BOW()
+    # np.save("dictionary.npy", dictionary)
+    # dictionary = np.load("dictionary.npy")
+    dictionary = np.load("../../dataset/vocabulary.npy")
+
+    bowDiction = cv2.BOWImgDescriptorExtractor(sift, cv2.BFMatcher(cv2.NORM_L2))
+    bowDiction.setVocabulary(dictionary)
+    print("bow dictionary: {}".format(np.shape(dictionary)))
+
+    train_desc, train_labels = get_features_db(bowDiction, sift)
+    np.save("train_desc.npy", train_desc)
+    np.save("train_labels.npy", train_labels)
+    # train_desc = np.load("train_desc.npy")
+    # train_labels = np.load("train_labels.npy")
+
+    print("svm items {} {}".format(len(train_desc), len(train_desc[0])))
+    train_desc = np.array(train_desc)
+    train_labels = np.array(train_labels)
+    svm = cv2.ml.SVM_create()
+    svm.train(train_desc, cv2.ml.ROW_SAMPLE, np.arange(95))
+
+    path = '../roi/out4.jpg'
+    roi = cv2.imread(path)
+    f = extract_features(path, bowDiction, sift)
+    p = svm.predict(f)
+    print("GT: 76 - P: {}".format(p))
