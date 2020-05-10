@@ -8,6 +8,7 @@ from sklearn.svm import LinearSVC, SVC, SVR, LinearSVR
 from scipy.spatial.distance import euclidean, minkowski
 
 
+# Used for BOW
 def create_vocabulary_db(db_dir_name):
     imgs_path_list = []
     for filename in os.listdir(db_dir_name):
@@ -35,16 +36,19 @@ def create_vocabulary_db(db_dir_name):
     return vocabulary
 
 
+# Used for BOW
 def read_vocabulary_db():
     vocabulary = np.load('../../dataset/vocabulary.npy')
     return vocabulary
 
 
+# Used for BOW
 def read_features_db():
     features = np.load('../../dataset/features.npy')
     return features
 
 
+# Used for BOW
 def extract_features_db(db_dir_name):
     sift = cv2.xfeatures2d.SIFT_create()
     matcher = cv2.BFMatcher()
@@ -68,6 +72,7 @@ def extract_features_db(db_dir_name):
     return features
 
 
+# Used for BOW
 def retrieve_img(img):
     # leggi le features_db
     features_db = read_features_db()
@@ -120,7 +125,7 @@ def retrieve_img(img):
     print(predict)"""
 
 
-def create_all_features_db(db_dir_name):
+def FORMER_create_all_features_db(db_dir_name):
     imgs_path_list = []
     for filename in os.listdir(db_dir_name):
         imgs_path_list.append(db_dir_name + filename)
@@ -145,6 +150,37 @@ def create_all_features_db(db_dir_name):
     np.save('../../dataset/range_features_db.npy', features_range)
 
 
+# USED THIS
+def create_all_features_db(db_dir_path, files_dir_path):
+    imgs_path_list = []
+    for filename in os.listdir(db_dir_path):
+        imgs_path_list.append(db_dir_path + filename)
+
+    sift = cv2.xfeatures2d.SIFT_create()
+
+    features_db = []
+    img_features_db = []
+
+    for i, p in enumerate(imgs_path_list):
+        img = cv2.imread(p)
+        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        kp, dsc = sift.detectAndCompute(gray_img, None)
+        features_db.extend(dsc)
+
+        num_repetition = len(dsc)
+        repeated_arr = np.repeat(i, num_repetition)
+        img_features_db = np.append(img_features_db, repeated_arr).astype(np.int)
+
+    img_features_db = img_features_db.reshape((1, img_features_db.shape[0]))
+
+    np.save(files_dir_path + 'features_db.npy', features_db)
+    np.save(files_dir_path + 'img_features_db.npy', img_features_db)
+
+    return features_db, img_features_db
+
+
+# UNUSED
 def retrieve(test_img_path):
     sift = cv2.xfeatures2d.SIFT_create()
 
@@ -172,6 +208,7 @@ def retrieve(test_img_path):
     return features_db, features_range, results, most_freq
 
 
+# UNUSED
 def get_unrolled_range_arr(range_arr, num_features):
     unrolled_arr = []
 
