@@ -1,8 +1,10 @@
 import cv2
 import numpy as np
 
+from Luca.vcsp.painting_retrieval.utils import get_unrolled_range_arr
 
-def sift_feature_matching_and_homography(roi, img, include_steps=True):
+
+def sift_feature_matching_and_homography(roi, img, include_steps=False):
     # https://docs.opencv.org/master/d1/de0/tutorial_py_feature_homography.html
     sift_roi = cv2.xfeatures2d_SIFT.create()
     kp_roi, des_roi = sift_roi.detectAndCompute(roi, None)
@@ -47,14 +49,16 @@ def sift_feature_matching_and_homography(roi, img, include_steps=True):
                        matchesMask=matchesMask,  # draw only inliers
                        flags=2)
 
+    warped = None
     if matchesMask:
         img_h, img_w, _ = img.shape
         warped = cv2.warpPerspective(src=roi, M=M, dsize=(img_w, img_h))
-        cv2.imshow('WARPED', warped)
+        # cv2.imshow('WARPED', warped)
 
     out = cv2.drawMatches(roi, kp_roi, img, kp_img, good, None, **draw_params)
-    cv2.imshow('OUT', out)
-    cv2.waitKey(-1)
+    return warped, out
+    # cv2.imshow('OUT', out)
+    # cv2.waitKey(-1)
 
 
 def retrieve_img_brute_force(roi):
@@ -121,6 +125,32 @@ def retrieve_img_brute_force(roi):
     cv2.waitKey(-1)
 
 
+def retrieve(img):
+    sift = cv2.xfeatures2d.SIFT_create()
+
+    features_db = np.load('../dataset/all_features_db.npy')
+    features_range = np.load('../dataset/range_features_db.npy')
+
+    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    h, w = gray_img.shape
+    w_perc = int(w * 0.25)
+    h_perc = int(h * 0.35)
+    gray_img = gray_img[0 + h_perc:h - h_perc, 0 + w_perc:w - w_perc]
+    kp, dsc = sift.detectAndCompute(gray_img, None)
+
+    knn = cv2.ml.KNearest_create()
+    knn.train(features_db, cv2.ml.ROW_SAMPLE, get_unrolled_range_arr(features_range, len(features_db)))
+
+    results = []
+    for d in dsc:
+        ret, _, _, _ = knn.findNearest(d.reshape((1, len(d))), 1)
+        results.append(int(ret))
+
+    most_freq = np.bincount(results).argmax()
+
+    return features_db, features_range, results, most_freq
+
+
 def extract_features(path, bowDiction, sift):
     image = cv2.imread(path)
     return bowDiction.compute(image, sift.detect(image))
@@ -171,7 +201,7 @@ if __name__ == '__main__':
     sift_feature_matching_and_homography(roi, img)
 
     # retrieve_img_brute_force(roi)
-        
+
     sift = cv2.xfeatures2d.SIFT_create()
     # dictionary = get_BOW()
     # np.save("dictionary.npy", dictionary)

@@ -1,5 +1,6 @@
 import cv2
 from Cristian.image_processing.detection import get_bb
+from Cristian.image_processing.retrieval_utils import sift_feature_matching_and_homography, retrieve
 from Luca.vcsp.painting_rectification.rectification import rectify
 
 if __name__ == '__main__':
@@ -34,11 +35,20 @@ if __name__ == '__main__':
                 cv2.waitKey(-1)
             if key == ord('r'):  # show rois
                 for i, roi in enumerate(rois):
-                    rect_roi = rectify(roi)
-                    cv2.imshow("Rectified roi {}".format(i), rect_roi)
+                    _, _, _, number = retrieve(roi)
+                    retrieved_img_filename = "{:03d}.png".format(number)
+                    retrieved_img = cv2.imread("../dataset/paintings_db/{}".format(retrieved_img_filename))
+                    warped, out = sift_feature_matching_and_homography(roi, retrieved_img)
+                    if warped is not None:
+                        cv2.imshow("Warped ROI-{}".format(i), warped)
+                        cv2.imshow("SIFT matching: ROI-{}".format(i), out)
+                    # rect_roi = rectify(roi)
+                    # cv2.imshow("Rectified roi {}".format(i), rect_roi)
                 cv2.waitKey(-1)
-                for i, roi in enumerate(rois):
-                    cv2.destroyWindow("Rectified roi {}".format(i))
+                for i in range(len(rois)):
+                    cv2.destroyWindow("Warped ROI-{}".format(i))
+                    cv2.destroyWindow("SIFT matching: ROI-{}".format(i))
+                    # cv2.destroyWindow("Rectified roi {}".format(i))
 
             if skip_frames:
                 pos_frames += video.get(cv2.CAP_PROP_FPS)
