@@ -1,4 +1,5 @@
 import os
+import copy
 
 import numpy as np
 import cv2
@@ -78,7 +79,23 @@ def retrieve_img(img):
     bow.setVocabulary(read_vocabulary_db())
 
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    h, w = gray_img.shape
+    w_perc = int(w * 0.25)
+    h_perc = int(h * 0.25)
+    gray_img = gray_img[0 + h_perc:h - h_perc, 0 + w_perc:w - w_perc]
+
+    cv2.imshow("crop", gray_img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
     kp = sift.detect(gray_img)
+
+    output = copy.deepcopy(gray_img)
+    output = cv2.drawKeypoints(output, kp, None)
+    cv2.imshow("crop", output)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
     feature_img = bow.compute(gray_img, kp)
     np.save('../../dataset/feature.npy', feature_img)
 
@@ -136,28 +153,36 @@ def retrieve(test_img_path):
 
     img = cv2.imread(test_img_path)
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    h, w = gray_img.shape
+    w_perc = int(w * 0.25)
+    h_perc = int(h * 0.35)
+    gray_img = gray_img[0 + h_perc:h - h_perc, 0 + w_perc:w - w_perc]
     kp, dsc = sift.detectAndCompute(gray_img, None)
 
-    neighbour = NearestNeighbors(n_neighbors=1)
-    neighbour.fit(features_db)
+    knn = cv2.ml.KNearest_create()
+    knn.train(features_db, cv2.ml.ROW_SAMPLE, get_unrolled_range_arr(features_range, len(features_db)))
 
     results = []
     for d in dsc:
-        dist, result = neighbour.kneighbors(d.reshape((1, len(d))))
-        results.append(get_img_by_index(result[0][0], features_range))
+        ret, _, _, _ = knn.findNearest(d.reshape((1, len(d))), 1)
+        results.append(int(ret))
 
-    (values, counts) = np.unique(results, return_counts=True)
-    ind = np.argmax(counts)
-    most_freq = values[ind]
+    most_freq = np.bincount(results).argmax()
 
     return features_db, features_range, results, most_freq
 
 
-def get_img_by_index(index, range_arr):
+def get_unrolled_range_arr(range_arr, num_features):
+    unrolled_arr = []
 
-    for i in range(len(range_arr)-1):
-        if range_arr[i] < index < range_arr[i + 1]:
-            return i
+    for i in range(len(range_arr)):
+        if i != len(range_arr) - 1:
+            num_repetition = range_arr[i+1] - range_arr[i]
         else:
-            continue
-    return len(range_arr)-1
+            num_repetition = num_features - range_arr[i]
+        repeated_arr = np.repeat(i, num_repetition)
+        unrolled_arr = np.append(unrolled_arr, repeated_arr).astype(np.int)
+
+    return unrolled_arr.reshape((1, len(unrolled_arr)))
+
+

@@ -11,6 +11,7 @@ if __name__ == '__main__':
 
     db_dir_name = '../../dataset/paintings_db/'
 
+    # PRIMO METODO
     """start_time = time.time()
 
     vocabulary = create_vocabulary_db(db_dir_name)
@@ -58,36 +59,38 @@ if __name__ == '__main__':
     img = cv2.imread("../../dataset/paintings_db/055.png")
     retrieve_img(img)"""
 
-    print("Creating features db ...")
-    create_all_features_db(db_dir_name)
-    print("Done")
+    # SECONDO METODO
 
-    print("Start")
+    """print("Creating features db ...")
+    create_all_features_db(db_dir_name)
+    print("Done")"""
+
+    print("ROI0 - Ground Truth = 9")
     features_db, features_range, results, ind = retrieve("./rois_test/roi0.png")
     print(results)
     print(ind)
 
-    print("Start")
+    print("ROI1 - Ground Truth = 76")
     features_db, features_range, results, ind = retrieve("./rois_test/roi1.png")
     print(results)
     print(ind)
 
-    print("Start")
+    print("ROI2 - Ground Truth = NOT IN DB")
     features_db, features_range, results, ind = retrieve("./rois_test/roi2.png")
     print(results)
     print(ind)
 
-    print("Start")
+    print("ROI3 - Ground Truth = 21")
     features_db, features_range, results, ind = retrieve("./rois_test/roi3.png")
     print(results)
     print(ind)
 
-    print("Start")
+    print("ROI4 - Ground Truth = 45")
     features_db, features_range, results, ind = retrieve("./rois_test/roi4.png")
     print(results)
     print(ind)
 
-    print("Start")
+    print("ROI5 - Ground Truth = 93")
     features_db, features_range, results, ind = retrieve("./rois_test/roi5.png")
     print(results)
     print(ind)
