@@ -1,7 +1,13 @@
 import cv2
 import numpy as np
-
+from pandas import read_csv
 from Luca.vcsp.painting_retrieval.utils import get_unrolled_range_arr
+
+
+def get_painting_info_from_csv(filename):
+    df = read_csv("../dataset/data.csv")
+    row = df.loc[df['Image'] == filename]
+    return row['Title'].values[0], row['Author'].values[0], row['Room'].values[0]
 
 
 def sift_feature_matching_and_homography(roi, img, include_steps=False):
