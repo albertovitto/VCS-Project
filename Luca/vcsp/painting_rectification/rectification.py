@@ -71,5 +71,41 @@ def rectify(img, include_steps=False):
         return output
 
 
+def rectify_with_retrieval(img, ground_truth):
+    sift_img = cv2.xfeatures2d_SIFT.create()
+    kp_img, des_img = sift_img.detectAndCompute(img, None)
+    out_img = cv2.drawKeypoints(img, kp_img, None)
 
+    sift_ground_truth = cv2.xfeatures2d_SIFT.create()
+    kp_ground_truth, des_ground_truth = sift_ground_truth.detectAndCompute(ground_truth, None)
+    out_ground_truth = cv2.drawKeypoints(ground_truth, kp_ground_truth, None)
 
+    MIN_MATCH_COUNT = 5
+    bf = cv2.BFMatcher()
+    matches = bf.knnMatch(des_img, des_ground_truth, k=2)
+
+    good = []
+    for m, n in matches:
+        if m.distance < 0.7 * n.distance:
+            good.append(m)
+    if len(good) > MIN_MATCH_COUNT:
+        src_pts = np.float32([kp_img[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+        dst_pts = np.float32([kp_ground_truth[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+        M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        matches_mask = mask.ravel().tolist()
+        h, w, d = img.shape
+        pts = np.float32([[0, 0], [0, h - 1], [w - 1, h - 1], [w - 1, 0]]).reshape(-1, 1, 2)
+        dst = cv2.perspectiveTransform(pts, M)
+        ground_truth = cv2.polylines(ground_truth, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)
+    else:
+        print("Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT))
+        matches_mask = None
+
+    rectified = None
+    if matches_mask:
+        ground_truth_h, ground_truth_w, _ = ground_truth.shape
+        rectified = cv2.warpPerspective(src=img, M=M, dsize=(ground_truth_w, ground_truth_h))
+
+    output = cv2.drawMatches(img, kp_img, ground_truth, kp_ground_truth, good, None,
+                          matchColor=(0, 255, 0), singlePointColor=None, matchesMask=matches_mask, flags=2)
+    return rectified, output

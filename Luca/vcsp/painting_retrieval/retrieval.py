@@ -39,7 +39,8 @@ class PaintingRetrieval:
 
         # create ranked list in descending order of similarity
         rank = {}
-        for i, v in enumerate(np.bincount(results)):
+        num_imgs_db = int(np.max(self.img_features_db, axis=1)) + 1
+        for i, v in enumerate(np.bincount(results, minlength=num_imgs_db)):
             rank[i] = v
         rank = {k: v for k, v in sorted(rank.items(), key=lambda item: item[1], reverse=True)}
 

@@ -5,6 +5,7 @@ import cv2
 
 from Luca.vcsp.painting_retrieval.retrieval import PaintingRetrieval
 from Luca.vcsp.painting_detection.detection import get_bb
+from Luca.vcsp.utils.multiple_show import show_on_row
 
 
 if __name__ == '__main__':
@@ -16,10 +17,10 @@ if __name__ == '__main__':
     retrieval.train()
 
     # video_name = '000/VIRB0393.MP4'
-    video_name = '001/GOPR5826.MP4'
+    # video_name = '001/GOPR5826.MP4'
     # video_name = '005/GOPR2045.MP4'
     # video_name = '012/IMG_4086.MOV'
-    # video_name = '005/GOPR2051.MP4'
+    video_name = '005/GOPR2051.MP4'
     # video_name = '004/IMG_3803.MOV'
     # video_name = '008/VIRB0419.MP4'
     # video_name = '008/VIRB0427.MP4'
@@ -51,9 +52,11 @@ if __name__ == '__main__':
             if key == ord('r'):  # show rois with image retrieval
                 for i, roi in enumerate(rois):
                     rank, _ = retrieval.predict(roi)
-                    cv2.putText(roi, "{}".format(rank[0]), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3,
+                    cv2.putText(roi, "{}".format(i), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3,
                                 False)
-                    cv2.imshow("Roi {}".format(i), roi)
+                    print("Roi {} - rank = {}".format(i, rank))
+                    ground_truth = cv2.imread('../../dataset/paintings_db/' + "{:03d}.png".format(rank[0]))
+                    cv2.imshow("Roi {}".format(i), show_on_row(roi, ground_truth))
                 cv2.waitKey(-1)
                 for i, roi in enumerate(rois):
                     cv2.destroyWindow("Roi {}".format(i))

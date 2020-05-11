@@ -38,6 +38,28 @@ def vertical_stack(img1, img2):
     return vstack
 
 
+def show_on_row(img1, img2):
+    height = max([img1.shape[0], img2.shape[0]])
+    width = img1.shape[1] + img2.shape[1]
+
+    output = np.zeros((height, width, 3), dtype=np.uint8)
+
+    output[0:img1.shape[0], 0:img1.shape[1], :] = img1
+    output[0:img2.shape[0], img1.shape[1]:, :] = img2
+
+    return output
+
+
+def show_on_col(img1, img2):
+    height = img1.shape[0] + img2.shape[0]
+    width = max([img1.shape[1], img2.shape[1]])
+
+    output = np.zeros((height, width, 3), dtype=np.uint8)
+
+    output[0:img1.shape[0], 0:img1.shape[1], :] = img1
+    output[img1.shape[0]:, 0:img2.shape[1]:, :] = img2
+
+    return output
 
 
 """
