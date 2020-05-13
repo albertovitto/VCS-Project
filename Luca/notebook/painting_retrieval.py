@@ -17,10 +17,10 @@ if __name__ == '__main__':
     retrieval.train()
 
     # video_name = '000/VIRB0393.MP4'
-    # video_name = '001/GOPR5826.MP4'
+    video_name = '001/GOPR5826.MP4'
     # video_name = '005/GOPR2045.MP4'
     # video_name = '012/IMG_4086.MOV'
-    video_name = '005/GOPR2051.MP4'
+    # video_name = '005/GOPR2051.MP4'
     # video_name = '004/IMG_3803.MOV'
     # video_name = '008/VIRB0419.MP4'
     # video_name = '008/VIRB0427.MP4'

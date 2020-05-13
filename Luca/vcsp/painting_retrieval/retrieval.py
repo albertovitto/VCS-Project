@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from Luca.vcsp.painting_retrieval.utils import create_all_features_db
+from Luca.vcsp.painting_retrieval.utils import create_all_features_db, rectangular_mask, elliptical_mask, adaptive_mask
 
 
 class PaintingRetrieval:
@@ -25,11 +25,10 @@ class PaintingRetrieval:
 
     def predict(self, test_img):
         gray_img = cv2.cvtColor(test_img, cv2.COLOR_BGR2GRAY)
-        h, w = gray_img.shape
-        w_perc = int(w * 0.25)
-        h_perc = int(h * 0.35)
-        gray_img = gray_img[0 + h_perc:h - h_perc, 0 + w_perc:w - w_perc]
-        kp, dsc = self.sift.detectAndCompute(gray_img, None)
+        mask = elliptical_mask(gray_img)
+        masked_data = cv2.bitwise_and(gray_img, gray_img, mask=mask)
+
+        kp, dsc = self.sift.detectAndCompute(masked_data, None)
 
         results = []
         # for each descriptor, find the most similar img_db
