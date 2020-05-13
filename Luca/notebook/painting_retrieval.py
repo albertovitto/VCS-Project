@@ -3,92 +3,72 @@ import time
 import numpy as np
 import cv2
 
-from Luca.vcsp.painting_retrieval.utils import create_vocabulary_db, read_vocabulary_db, extract_features_db,\
-    read_features_db, retrieve_img, retrieve, create_all_features_db
+from Luca.vcsp.painting_retrieval.retrieval import PaintingRetrieval
+from Luca.vcsp.painting_detection.detection import get_bb
+from Luca.vcsp.utils.multiple_show import show_on_row
 
 
 if __name__ == '__main__':
 
-    db_dir_name = '../../dataset/paintings_db/'
+    db_dir_path = '../../dataset/paintings_db/'
+    files_dir_path = '../../dataset/'
 
-    """start_time = time.time()
+    retrieval = PaintingRetrieval(db_dir_path, files_dir_path)
+    retrieval.train()
 
-    vocabulary = create_vocabulary_db(db_dir_name)
+    # video_name = '000/VIRB0393.MP4'
+    video_name = '001/GOPR5826.MP4'
+    # video_name = '005/GOPR2045.MP4'
+    # video_name = '012/IMG_4086.MOV'
+    # video_name = '005/GOPR2051.MP4'
+    # video_name = '004/IMG_3803.MOV'
+    # video_name = '008/VIRB0419.MP4'
+    # video_name = '008/VIRB0427.MP4'
+    # video_name = '012/IMG_4080.MOV'
+    # video_name = '002/20180206_114720.mp4'
 
-    end_time = time.time()
-    print(end_time-start_time)  # 7 min (num clusters = 500)
+    video_path = '../../dataset/videos/%s' % video_name
 
-    # vocabulary = read_vocabulary_db()
+    video = cv2.VideoCapture(video_path)
 
-    features = extract_features_db(db_dir_name)
+    if not video.isOpened():
+        print("Error: video not opened correctly")
 
-    # features = read_features_db()
-    print(len(features))  # 95"""
+    lost_frames = 0
+    pos_frames = 0
+    skip_frames = True
+    while video.isOpened():
+        ret, frame = video.read()
 
+        if ret:
+            output, rois = get_bb(frame, include_steps=True)
+            cv2.imshow("Painting detection", output)
 
-    """print("ROI0 - Ground Truth = 9")
-    img = cv2.imread("./rois_test/roi0.png")
-    retrieve_img(img)
- 
-    print("ROI1 - Ground Truth = 76")
-    img = cv2.imread("./rois_test/roi1.png")
-    retrieve_img(img)
+            key = cv2.waitKey(1)
+            if key == ord('q'):  # quit
+                break
+            if key == ord('p'):  # pause
+                cv2.waitKey(-1)
+            if key == ord('r'):  # show rois with image retrieval
+                for i, roi in enumerate(rois):
+                    rank, _ = retrieval.predict(roi)
+                    cv2.putText(roi, "{}".format(i), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3,
+                                False)
+                    print("Roi {} - rank = {}".format(i, rank))
+                    ground_truth = cv2.imread('../../dataset/paintings_db/' + "{:03d}.png".format(rank[0]))
+                    cv2.imshow("Roi {}".format(i), show_on_row(roi, ground_truth))
+                cv2.waitKey(-1)
+                for i, roi in enumerate(rois):
+                    cv2.destroyWindow("Roi {}".format(i))
 
-    print("ROI3 - Ground Truth = 21")
-    img = cv2.imread("./rois_test/roi3.png")
-    retrieve_img(img)
+            if skip_frames:
+                pos_frames += video.get(cv2.CAP_PROP_FPS)
+                video.set(cv2.CAP_PROP_POS_FRAMES, pos_frames)
+        else:
+            lost_frames += 1
+            if lost_frames > 10:
+                print("Too many errors reading video or video ended")
+                break
 
-    print("ROI4 - Ground Truth = 45")
-    img = cv2.imread("./rois_test/roi4.png")
-    retrieve_img(img)
-
-    print("ROI5 - Ground Truth = 93")
-    img = cv2.imread("./rois_test/roi5.png")
-    retrieve_img(img)
-
-    print("IMG0 - Ground Truth = 0")
-    img = cv2.imread("../../dataset/paintings_db/000.png")
-    retrieve_img(img)
-
-    print("IMG10 - Ground Truth = 10")
-    img = cv2.imread("../../dataset/paintings_db/010.png")
-    retrieve_img(img)
-
-    print("IMG55 - Ground Truth = 55")
-    img = cv2.imread("../../dataset/paintings_db/055.png")
-    retrieve_img(img)"""
-
-    print("Creating features db ...")
-    create_all_features_db(db_dir_name)
-    print("Done")
-
-    print("Start")
-    features_db, features_range, results, ind = retrieve("./rois_test/roi0.png")
-    print(results)
-    print(ind)
-
-    print("Start")
-    features_db, features_range, results, ind = retrieve("./rois_test/roi1.png")
-    print(results)
-    print(ind)
-
-    print("Start")
-    features_db, features_range, results, ind = retrieve("./rois_test/roi2.png")
-    print(results)
-    print(ind)
-
-    print("Start")
-    features_db, features_range, results, ind = retrieve("./rois_test/roi3.png")
-    print(results)
-    print(ind)
-
-    print("Start")
-    features_db, features_range, results, ind = retrieve("./rois_test/roi4.png")
-    print(results)
-    print(ind)
-
-    print("Start")
-    features_db, features_range, results, ind = retrieve("./rois_test/roi5.png")
-    print(results)
-    print(ind)
-
+    video.release()
+    cv2.destroyAllWindows()

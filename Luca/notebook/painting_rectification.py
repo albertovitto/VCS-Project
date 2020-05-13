@@ -1,8 +1,19 @@
 import cv2
 from Luca.vcsp.painting_detection.detection import get_bb
-from Luca.vcsp.painting_rectification.rectification import rectify
+from Luca.vcsp.painting_rectification.rectification import rectify, rectify_with_retrieval
+from Luca.vcsp.painting_retrieval.retrieval import PaintingRetrieval
 
 if __name__ == '__main__':
+
+    use_retrieval = True
+    include_matches = True
+
+    if use_retrieval:
+        db_dir_path = '../../dataset/paintings_db/'
+        files_dir_path = '../../dataset/'
+
+        retrieval = PaintingRetrieval(db_dir_path, files_dir_path)
+        retrieval.train()
 
     # video_name = '000/VIRB0393.MP4'
     video_name = '001/GOPR5826.MP4'
@@ -39,11 +50,24 @@ if __name__ == '__main__':
                 cv2.waitKey(-1)
             if key == ord('r'):  # show rectified rois
                 for i, roi in enumerate(rois):
-                    rect_roi = rectify(roi, include_steps=False)
-                    cv2.imshow("Rectified roi {}".format(i), rect_roi)
+
+                    if use_retrieval:
+                        rank, _ = retrieval.predict(roi)
+                        ground_truth = cv2.imread('../../dataset/paintings_db/' + "{:03d}.png".format(rank[0]))
+                        rect_roi, matches = rectify_with_retrieval(roi, ground_truth)
+                    else:
+                        rect_roi = rectify(roi, include_steps=False)
+
+                    if rect_roi is not None:
+                        cv2.imshow("Rectified roi {}".format(i), rect_roi)
+                        if use_retrieval and include_matches:
+                            cv2.imshow("Matches roi {}".format(i), matches)
+
                 cv2.waitKey(-1)
                 for i, roi in enumerate(rois):
                     cv2.destroyWindow("Rectified roi {}".format(i))
+                    if use_retrieval and include_matches:
+                        cv2.destroyWindow("Matches roi {}".format(i))
 
             if skip_frames:
                 pos_frames += video.get(cv2.CAP_PROP_FPS)
