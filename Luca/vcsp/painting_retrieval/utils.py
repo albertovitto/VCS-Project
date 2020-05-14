@@ -229,6 +229,9 @@ def create_all_features_db(db_dir_path, files_dir_path):
     np.save(files_dir_path + 'features_db.npy', features_db)
     np.save(files_dir_path + 'img_features_db.npy', img_features_db)
 
+    features_db = np.load(files_dir_path + 'features_db.npy')
+    img_features_db = np.load(files_dir_path + 'img_features_db.npy')
+
     return features_db, img_features_db
 
 
