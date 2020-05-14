@@ -4,6 +4,23 @@ from Luca.vcsp.painting_detection.constants import MIN_HULL_POINTS, MIN_POLY_POI
     MIN_ROTATED_ELLIPSE_AREA_PERCENT, MIN_POLY_AREA_PERCENT, MAX_RATIO_SIZE, MAX_GRAY_60_PERCENTILE, MIN_VARIANCE
 
 
+def frame_process(img):
+    alpha, beta = auto_alpha_beta(img)
+    adjusted_img = cv2.convertScaleAbs(img, alpha=alpha, beta=beta)
+
+    gray_img = cv2.cvtColor(adjusted_img, cv2.COLOR_BGR2GRAY)
+
+    blur = cv2.GaussianBlur(gray_img, (5, 5), 0)
+
+    th = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 25, 5)
+
+    morph = cv2.morphologyEx(th, cv2.MORPH_OPEN, np.ones((3, 3)), iterations=1)
+    morph = cv2.morphologyEx(morph, cv2.MORPH_CLOSE, np.ones((5, 5)), iterations=3)
+    morph = cv2.morphologyEx(morph, cv2.MORPH_OPEN, np.ones((5, 5)), iterations=1)
+
+    return blur, th, morph
+
+
 def get_roi(bounding_box, img):
     x, y, w, h = bounding_box
     mask = np.zeros_like(img[:, :, 0])
