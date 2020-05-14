@@ -4,22 +4,13 @@ import copy
 from Luca.vcsp.painting_detection.utils import auto_alpha_beta, is_painting, get_roi
 from Luca.vcsp.utils import multiple_show
 from Luca.vcsp.painting_detection.constants import MIN_HULL_AREA_PERCENT
+from Luca.vcsp.painting_detection.utils import frame_process
+# from Cristian.image_processing.cri_processing_strat import frame_process
 
 
 def get_bb(img, include_steps=False):
 
-    alpha, beta = auto_alpha_beta(img)
-    adjusted_img = cv2.convertScaleAbs(img, alpha=alpha, beta=beta)
-
-    gray_img = cv2.cvtColor(adjusted_img, cv2.COLOR_BGR2GRAY)
-
-    blur = cv2.GaussianBlur(gray_img, (5, 5), 0)
-
-    th = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 25, 5)
-
-    morph = cv2.morphologyEx(th, cv2.MORPH_OPEN, np.ones((3, 3)), iterations=1)
-    morph = cv2.morphologyEx(morph, cv2.MORPH_CLOSE, np.ones((5, 5)), iterations=3)
-    morph = cv2.morphologyEx(morph, cv2.MORPH_OPEN, np.ones((5, 5)), iterations=1)
+    blur, th, morph = frame_process(img)
 
     _, contours, _ = cv2.findContours(morph, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
