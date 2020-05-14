@@ -13,6 +13,27 @@ from utils import stack_frames, extract_rotated_rectangle
 # https://stackoverflow.com/questions/29739411/what-does-cv2-cv-boxpointsrect-return/51952289
 # https://stackoverflow.com/questions/52782359/is-there-a-way-to-use-cv2-approxpolydp-to-approximate-open-curve
 
+def frame_process (frame):
+    h, w, c = frame.shape
+    original = frame.copy()
+
+    gray_bw = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray_rgb = cv2.cvtColor(gray_bw, cv2.COLOR_GRAY2BGR)
+
+    denoised = cv2.fastNlMeansDenoising(
+        gray_bw, h=70, templateWindowSize=7, searchWindowSize=5)
+
+    adap_th = cv2.adaptiveThreshold(
+        denoised, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 45, 5
+    )
+
+    kernel = np.ones((3, 3), np.uint8)
+    closing = cv2.morphologyEx(adap_th, cv2.MORPH_CLOSE, kernel,
+                               iterations=8, borderType=cv2.BORDER_CONSTANT, borderValue=0)
+    morph_grad = cv2.morphologyEx(closing, cv2.MORPH_GRADIENT, kernel,
+                                  iterations=5, borderType=cv2.BORDER_CONSTANT, borderValue=0)
+
+    return denoised, adap_th, morph_grad
 
 def painting_detection(frame):
 
