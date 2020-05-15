@@ -17,5 +17,5 @@ def frame_process(img):
     blur = cv2.bilateralFilter(gray, 5, 75, 75)
     th = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 45, 5)
     morph = cv2.morphologyEx(th, cv2.MORPH_CLOSE, np.ones((5, 5)), iterations=3)
-    morph = cv2.dilate(morph, np.ones((3, 3)))
+    # morph = cv2.dilate(morph, np.ones((3, 3)))
     return blur, th, morph
