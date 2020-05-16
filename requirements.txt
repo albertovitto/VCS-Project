@@ -5,9 +5,12 @@ black==19.10b0
 click==7.1.2
 cycler==0.10.0
 decorator==4.4.2
+future==0.18.2
 imageio==2.8.0
 joblib==0.14.1
 kiwisolver==1.1.0
+labelImg==1.8.3
+lxml==4.5.0
 matplotlib==3.2.1
 networkx==2.4
 numpy==1.18.2
@@ -17,6 +20,8 @@ pathspec==0.8.0
 Pillow==7.0.0
 pycodestyle==2.5.0
 pyparsing==2.4.6
+PyQt5==5.14.2
+PyQt5-sip==12.7.2
 python-dateutil==2.8.1
 pytz==2020.1
 PyWavelets==1.1.1
