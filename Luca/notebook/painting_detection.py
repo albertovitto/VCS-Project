@@ -1,5 +1,6 @@
 import cv2
 from Luca.vcsp.painting_detection.detection import get_bb
+from Luca.vcsp.painting_detection.evaluation import read_dict_for_test_set
 
 
 if __name__ == '__main__':
@@ -11,11 +12,14 @@ if __name__ == '__main__':
     # video_name = '005/GOPR2051.MP4'
     # video_name = '004/IMG_3803.MOV'
     # video_name = '008/VIRB0419.MP4'
-    video_name = '008/VIRB0427.MP4'
+    # video_name = '008/VIRB0427.MP4'
     # video_name = '012/IMG_4080.MOV'
     # video_name = '002/20180206_114720.mp4'
 
-    video_path = '../../dataset/videos/%s' % video_name
+    # video_path = '../../dataset/videos/%s' % video_name
+
+    dict = read_dict_for_test_set()
+    video_path = dict['014']
 
     video = cv2.VideoCapture(video_path)
 
