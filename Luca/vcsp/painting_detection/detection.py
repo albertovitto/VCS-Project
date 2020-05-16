@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 import copy
-from Luca.vcsp.painting_detection.utils import auto_alpha_beta, is_painting, get_roi
+from Luca.vcsp.painting_detection.utils import is_painting, get_roi
 from Luca.vcsp.utils import multiple_show
 from Luca.vcsp.painting_detection.constants import MIN_HULL_AREA_PERCENT
 from Luca.vcsp.painting_detection.utils import frame_process
