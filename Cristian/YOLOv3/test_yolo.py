@@ -5,6 +5,7 @@ import cv2
 
 from Luca.vcsp.painting_retrieval.retrieval import PaintingRetrieval
 from Luca.vcsp.painting_detection.detection import get_bb
+from Luca.vcsp.utils.drawing import draw_bb
 from Luca.vcsp.utils.multiple_show import show_on_row
 
 import torch
@@ -138,10 +139,10 @@ if __name__ == '__main__':
         if ret:
             people_bb = yolo.retrieve_people_bb(frame)
             print(people_bb)
-            output, rois = get_bb(frame, include_steps=False)
+            output, rois, bbs = get_bb(frame, include_steps=False)
             for bb in people_bb:
                 x, y, w, h = bb
-                cv2.rectangle(output, (x, y), (x + w, y + h), (0, 0, 255))
+                draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(0, 0, 255), label="person")
             cv2.imshow("Painting detection", output)
 
             key = cv2.waitKey(1)
