@@ -90,6 +90,8 @@ class Yolo():
 
         bb = []
         for x in output:
+            if int(x[7].item()) != 0:
+                continue
             x1 = int(x[1].item())
             y1 = int(x[2].item())
             x2 = int(x[3].item())
