@@ -6,6 +6,7 @@ from Luca.vcsp.utils import multiple_show
 from Luca.vcsp.painting_detection.constants import MIN_HULL_AREA_PERCENT
 from Luca.vcsp.painting_detection.utils import frame_process
 # from Cristian.image_processing.cri_processing_strat import frame_process
+from Luca.vcsp.utils.drawing import draw_bb
 
 
 def get_bb(img, include_steps=False):
@@ -63,8 +64,10 @@ def get_bb(img, include_steps=False):
                 if include_steps:
                     cv2.drawContours(output, [candidate_hulls[index]], 0, (0, 0, 255), 2)
                     cv2.drawContours(output, [candidate_polys[index]], 0, (0, 255, 0), 2)
-                cv2.rectangle(output, (x, y), (x + w, y + h), (255, 0, 0), 2)
-                cv2.putText(output, "{}".format(i), (x + 5, y + 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3, False)
+
+                draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(255, 0, 0), label="painting")
+                # cv2.rectangle(output, (x, y), (x + w, y + h), (255, 0, 0), 2)
+                # cv2.putText(output, "{}".format(i), (x + 5, y + 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3, False)
 
                 roi = get_roi(candidate_bounding_boxes[index], img)
                 rois.append(roi)

@@ -14,12 +14,12 @@ if __name__ == '__main__':
     # video_name = '008/VIRB0419.MP4'
     # video_name = '008/VIRB0427.MP4'
     # video_name = '012/IMG_4080.MOV'
-    # video_name = '002/20180206_114720.mp4'
+    video_name = '002/20180206_114720.mp4'
 
-    # video_path = '../../dataset/videos/%s' % video_name
+    video_path = '../../dataset/videos/%s' % video_name
 
-    dict = read_dict_for_test_set()
-    video_path = dict['014']
+    # dict = read_dict_for_test_set()
+    # video_path = dict['014']
 
     video = cv2.VideoCapture(video_path)
 
@@ -33,7 +33,7 @@ if __name__ == '__main__':
         ret, frame = video.read()
 
         if ret:
-            output, rois = get_bb(frame, include_steps=True)
+            output, rois = get_bb(frame, include_steps=False)
             cv2.imshow("Painting detection", output)
 
             key = cv2.waitKey(1)
