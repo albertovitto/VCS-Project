@@ -40,7 +40,7 @@ if __name__ == '__main__':
         ret, frame = video.read()
 
         if ret:
-            output, rois = get_bb(frame, include_steps=True)
+            output, rois, _ = get_bb(frame, include_steps=True)
             cv2.imshow("Painting detection", output)
 
             key = cv2.waitKey(1)

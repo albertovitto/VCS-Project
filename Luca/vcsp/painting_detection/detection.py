@@ -17,6 +17,7 @@ def get_bb(img, include_steps=False):
 
     output = copy.deepcopy(img)
     rois = []
+    bbs = []
 
     if len(contours) != 0:
         candidate_bounding_boxes = []
@@ -71,10 +72,11 @@ def get_bb(img, include_steps=False):
 
                 roi = get_roi(candidate_bounding_boxes[index], img)
                 rois.append(roi)
+                bbs.append(candidate_bounding_boxes[index])
 
     if include_steps:
         hstack1 = multiple_show.horizontal_stack(blur, th)
         hstack2 = multiple_show.horizontal_stack(morph, output)
         output = multiple_show.vertical_stack(hstack1, hstack2)
 
-    return output, rois
+    return output, rois, bbs
