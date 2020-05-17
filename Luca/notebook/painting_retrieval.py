@@ -36,12 +36,12 @@ if __name__ == '__main__':
 
     lost_frames = 0
     pos_frames = 0
-    skip_frames = True
+    skip_frames = False
     while video.isOpened():
         ret, frame = video.read()
 
         if ret:
-            output, rois = get_bb(frame, include_steps=True)
+            output, rois, _ = get_bb(frame, include_steps=True)
             cv2.imshow("Painting detection", output)
 
             key = cv2.waitKey(1)

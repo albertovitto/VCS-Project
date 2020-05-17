@@ -1,9 +1,11 @@
 import cv2
-from Luca.vcsp.painting_detection.detection import get_bb
-from Luca.vcsp.painting_detection.evaluation import read_dict_for_test_set
+
+from Luca.vcsp.people_detection.detection import PeopleDetector
 
 
 if __name__ == '__main__':
+
+    pd = PeopleDetector()
 
     # video_name = '000/VIRB0393.MP4'
     # video_name = '001/GOPR5826.MP4'
@@ -28,12 +30,12 @@ if __name__ == '__main__':
 
     lost_frames = 0
     pos_frames = 0
-    skip_frames = True
+    skip_frames = False
     while video.isOpened():
         ret, frame = video.read()
 
         if ret:
-            output, rois, _ = get_bb(frame, include_steps=False)
+            output = pd.get_bb(frame)
             cv2.imshow("Painting detection", output)
 
             key = cv2.waitKey(1)
@@ -41,12 +43,6 @@ if __name__ == '__main__':
                 break
             if key == ord('p'):  # pause
                 cv2.waitKey(-1)
-            if key == ord('r'):  # show rois
-                for i, roi in enumerate(rois):
-                    cv2.imshow("Roi {}".format(i), roi)
-                cv2.waitKey(-1)
-                for i, roi in enumerate(rois):
-                    cv2.destroyWindow("Roi {}".format(i))
 
             if skip_frames:
                 pos_frames += video.get(cv2.CAP_PROP_FPS)

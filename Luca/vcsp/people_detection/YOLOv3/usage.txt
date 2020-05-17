@@ -1,0 +1,14 @@
+download weights: 
+https://pjreddie.com/media/files/yolov3.weights
+
+image:
+$ python detect.py  --weights yolov3.weights --images "dog-cycle-car.png" --det "detections"
+
+video:
+$ python video_demo.py --video "/home/alberto/Desktop/VCS-Project/VCS-Project/dataset/videos/014/VID_20180529_112517.mp4"
+
+references:
+https://github.com/ayooshkathuria/pytorch-yolo-v3
+https://pjreddie.com/darknet/
+
+
