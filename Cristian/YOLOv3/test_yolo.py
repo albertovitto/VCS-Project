@@ -16,18 +16,6 @@ from Cristian.YOLOv3.darknet import Darknet
 from Cristian.YOLOv3.preprocess import prep_image, inp_to_image, letterbox_image
 
 
-def get_test_input(input_dim, CUDA):
-    img = cv2.imread("dog-cycle-car.png")
-    img = cv2.resize(img, (input_dim, input_dim))
-    img_ = img[:, :, ::-1].transpose((2, 0, 1))
-    img_ = img_[np.newaxis, :, :, :] / 255.0
-    img_ = torch.from_numpy(img_).float()
-    img_ = Variable(img_)
-    if CUDA:
-        img_ = img_.cuda()
-    return img_
-
-
 class Yolo():
     def __init__(self, confidence=0.5, nms_thesh=0.4, num_classes=80):
         self.confidence = confidence
@@ -46,8 +34,20 @@ class Yolo():
         assert self.inp_dim > 32
         if self.CUDA:
             self.model.cuda()
-        self.model(get_test_input(self.inp_dim, self.CUDA), self.CUDA)
+        self.model(self.get_test_input(self.inp_dim, self.CUDA), self.CUDA)
         self.model.eval()
+
+    @staticmethod
+    def get_test_input(input_dim, CUDA):
+        img = cv2.imread("dog-cycle-car.png")
+        img = cv2.resize(img, (input_dim, input_dim))
+        img_ = img[:, :, ::-1].transpose((2, 0, 1))
+        img_ = img_[np.newaxis, :, :, :] / 255.0
+        img_ = torch.from_numpy(img_).float()
+        img_ = Variable(img_)
+        if CUDA:
+            img_ = img_.cuda()
+        return img_
 
     @staticmethod
     def prep_image(img, inp_dim):
@@ -74,6 +74,10 @@ class Yolo():
 
         with torch.no_grad():
             output = self.model(Variable(img), self.CUDA)
+
+        if type(output) == int:
+            return [(0, 0, 0, 0)]
+
         output = write_results(output, self.confidence, self.num_classes, nms=True, nms_conf=self.nms_thesh)
 
         im_dim = im_dim.repeat(output.size(0), 1)
@@ -101,6 +105,49 @@ class Yolo():
             bb.append((x1, y1, w, h))
 
         return bb
+
+
+def intersection_over_person(painting, person):
+    # inspired by https://gist.github.com/meyerjo/dd3533edc97c81258898f60d8978eddc
+    A = painting
+    B = person
+
+    # top-left coord of box A/B
+    x1a, y1a, wa, ha = A
+    x1b, y1b, wb, hb = B
+
+    # bottom-right coord of box A/B
+    x2a = x1a + wa
+    y2a = y1a + ha
+    x2b = x1b + wb
+    y2b = y1b + hb
+
+    # top-left coord of intersection
+    x1i = max(x1a, x1b)
+    y1i = max(y1a, y1b)
+
+    # bottom-right coord og intersection
+    x2i = min(x2a, x2b)
+    y2i = min(y2a, y2b)
+
+    areaI = abs(max((x2i - x1i, 0)) * max((y2i - y1i), 0))
+    areaB = wb * hb
+
+    if areaB == 0:
+        return 0
+    return areaI / float(areaB)
+
+
+def check_bbs_iou(paintings, people, threshold=0.7):
+    selected_people = []
+    for person in people:
+        selected_people.append(person)
+        for painting in paintings:
+            iop = intersection_over_person(painting, person)
+            if iop > threshold:
+                selected_people.pop()
+                break
+    return selected_people
 
 
 if __name__ == '__main__':
@@ -139,9 +186,10 @@ if __name__ == '__main__':
         ret, frame = video.read()
 
         if ret:
-            people_bb = yolo.retrieve_people_bb(frame)
-            print(people_bb)
             output, rois, bbs = get_bb(frame, include_steps=False)
+            people_bb = yolo.retrieve_people_bb(frame)
+            people_bb = check_bbs_iou(paintings=bbs, people=people_bb)
+            # print(people_bb)
             for bb in people_bb:
                 x, y, w, h = bb
                 draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(0, 0, 255), label="person")
