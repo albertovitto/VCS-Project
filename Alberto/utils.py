@@ -16,16 +16,21 @@ def stack_frames(*argv):
     # each frames has NOT been resized before, they have all the same original size and they all are in gray
     if not argv:
         raise ValueError('Cant pass empty array to stack_frames function')
-    if len(argv[0].shape) >= 3:
-        raise ValueError('Only gray frames to stack_frames function')
 
-    h, w = argv[0].shape
+    frames = []
+    for frame in argv:
+        if len(frame.shape) == 2:
+            frame = cv2.cvtColor(frame, code=cv2.COLOR_GRAY2BGR)
+
+        frames.append(frame)
+
+    h, w, c = frames[0].shape
     frames_seen = 0
     frames_tot = len(argv)
     ROWS = math.ceil(frames_tot/3)
     COLS = 3
 
-    stacked_frames = np.zeros(shape=(ROWS*h, COLS*w), dtype=np.uint8)
+    stacked_frames = np.zeros(shape=(ROWS*h, COLS*w, c), dtype=np.uint8)
 
     for row in range(ROWS):
         for col in range(COLS):
@@ -33,7 +38,7 @@ def stack_frames(*argv):
             if frames_seen < frames_tot:
                 stacked_frames[
                     h*row: h*row+h,
-                    w * col: w*col+w] = argv[frames_seen]
+                    w * col: w*col+w, :] = frames[frames_seen]
                 frames_seen += 1
 
     while stacked_frames.shape[1] > 1920:

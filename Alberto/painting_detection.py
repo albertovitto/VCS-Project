@@ -13,7 +13,8 @@ from utils import stack_frames, extract_rotated_rectangle
 # https://stackoverflow.com/questions/29739411/what-does-cv2-cv-boxpointsrect-return/51952289
 # https://stackoverflow.com/questions/52782359/is-there-a-way-to-use-cv2-approxpolydp-to-approximate-open-curve
 
-def frame_process (frame):
+
+def frame_process(frame):
     h, w, c = frame.shape
     original = frame.copy()
 
@@ -34,6 +35,7 @@ def frame_process (frame):
                                   iterations=5, borderType=cv2.BORDER_CONSTANT, borderValue=0)
 
     return denoised, adap_th, morph_grad
+
 
 def painting_detection(frame):
 
@@ -74,8 +76,8 @@ def painting_detection(frame):
             boxes.append((x, y, w, h))
             # cv2.drawContours(gray_bw_cnt, [box], -1, (0, 255, 0), 10)
 
-    stacked_frames = stack_frames(
-        gray_bw, denoised, adap_th, closing, morph_grad, gray_bw_cnt)
+    stacked_frames = stack_frames(original,
+                                  gray_bw, denoised, adap_th, closing, morph_grad, gray_bw_cnt)
     return stacked_frames, boxes
 
 
