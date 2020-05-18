@@ -13,14 +13,15 @@ def resize_image(scale_percent, image):
 
 # I want 3 frames for each row, independently of the number of the frames
 def stack_frames(*argv):
-    # each frames has NOT been resized before, they have all the same original size and they all are in gray
+    # each frames has NOT been resized before, they have all the same original size of the video
     if not argv:
         raise ValueError('Cant pass empty array to stack_frames function')
 
     frames = []
+
     for frame in argv:
         if len(frame.shape) == 2:
-            frame = cv2.cvtColor(frame, code=cv2.COLOR_GRAY2BGR)
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         frames.append(frame)
 
@@ -38,14 +39,15 @@ def stack_frames(*argv):
             if frames_seen < frames_tot:
                 stacked_frames[
                     h*row: h*row+h,
-                    w * col: w*col+w, :] = frames[frames_seen]
+                    w * col: w*col+w,
+                    :] = frames[frames_seen]
                 frames_seen += 1
 
     while stacked_frames.shape[1] > 1920:
-        stacked_frames = resize_image(70, stacked_frames)
+        stacked_frames = resize_image(scale_percent=90, stacked_frames)
 
     while stacked_frames.shape[0] > 960:
-        stacked_frames = resize_image(70, stacked_frames)
+        stacked_frames = resize_image(scale_percent=90, stacked_frames)
 
     return stacked_frames
     # a = np.hstack((gray_bw, closing, morph_grad))
