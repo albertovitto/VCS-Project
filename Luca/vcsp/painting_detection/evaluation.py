@@ -5,7 +5,8 @@ import cv2
 
 
 VIDEOS_FOLDER_PATH = os.path.join('..', '..', 'dataset', 'videos')
-TEST_SET_FOLDER_PATH = os.path.join('..', '..', 'dataset', 'painting_detection_test_sets')
+TEST_SET_FOLDER_PATH = os.path.join('..', '..', 'dataset', 'painting_detection_test_set')
+GROUND_TRUTH_FOLDER_PATH = os.path.join('..', '..', 'dataset', 'painting_detection_ground_truth')
 
 
 # RUN ONCE
@@ -21,21 +22,21 @@ def create_random_dict_for_test_set():
 
 
 def read_dict_for_test_set():
-    d = {'000': '..\\..\\dataset\\videos\\000\\VIRB0394.MP4',
-         '001': '..\\..\\dataset\\videos\\001\\GOPR5827.MP4',
-         '002': '..\\..\\dataset\\videos\\002\\20180206_114506.mp4',
+    d = {'000': '..\\..\\dataset\\videos\\000\\VIRB0393.MP4',
+         '001': '..\\..\\dataset\\videos\\001\\GOPR5825.MP4',
+         '002': '..\\..\\dataset\\videos\\002\\20180206_114720.mp4',
          '003': '..\\..\\dataset\\videos\\003\\GOPR1929.MP4',
-         '004': '..\\..\\dataset\\videos\\004\\IMG_3816.MOV',
-         '005': '..\\..\\dataset\\videos\\005\\GOPR1948.MP4',
-         '006': '..\\..\\dataset\\videos\\006\\IMG_9621.MOV',
-         '007': '..\\..\\dataset\\videos\\007\\IMG_7857.MOV',
-         '008': '..\\..\\dataset\\videos\\008\\VIRB0427.MP4',
-         '009': '..\\..\\dataset\\videos\\009\\IMG_2646.MOV',
-         '010': '..\\..\\dataset\\videos\\010\\VID_20180529_112849.mp4',
+         '004': '..\\..\\dataset\\videos\\004\\IMG_3803.MOV',
+         '005': '..\\..\\dataset\\videos\\005\\GOPR2051.MP4',
+         '006': '..\\..\\dataset\\videos\\006\\IMG_9629.MOV',
+         '007': '..\\..\\dataset\\videos\\007\\IMG_7852.MOV',
+         '008': '..\\..\\dataset\\videos\\008\\VIRB0420.MP4',
+         '009': '..\\..\\dataset\\videos\\009\\IMG_2659.MOV',
+         '010': '..\\..\\dataset\\videos\\010\\VID_20180529_112706.mp4',
          '011': '..\\..\\dataset\\videos\\011\\3.mp4',
-         '012': '..\\..\\dataset\\videos\\012\\IMG_4076.MOV',
+         '012': '..\\..\\dataset\\videos\\012\\IMG_4087.MOV',
          '013': '..\\..\\dataset\\videos\\013\\20180529_112417_ok.mp4',
-         '014': '..\\..\\dataset\\videos\\014\\VID_20180529_112739.mp4'
+         '014': '..\\..\\dataset\\videos\\014\\VID_20180529_113001.mp4'
          }
 
     return d
@@ -50,6 +51,7 @@ def create_test_set(videos_path_list):
         print("Test set already created.")
         return
 
+    print("Creating test set ...")
     for folder, video_path in videos_path_list.items():
         print("Extracting frames for video {} ...".format(folder))
         video = cv2.VideoCapture(video_path)
@@ -59,6 +61,7 @@ def create_test_set(videos_path_list):
 
         counter = 0
         pos_frames = 0
+        lost_frames = 0
         while video.isOpened():
             ret, frame = video.read()
 
@@ -69,11 +72,17 @@ def create_test_set(videos_path_list):
                 counter += 1
 
                 pos_frames += video.get(cv2.CAP_PROP_FPS)
+                if pos_frames > video.get(cv2.CAP_PROP_FRAME_COUNT):
+                    break
                 video.set(cv2.CAP_PROP_POS_FRAMES, pos_frames)
             else:
-                break
+                lost_frames += 1
+                if lost_frames > 10:
+                    break
 
         print("Extracting frames for video {} Done.".format(folder))
+
+    print("Creating test set ... Done.")
 
 
 def eval_test_set():

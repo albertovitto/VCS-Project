@@ -90,3 +90,33 @@ def auto_alpha_beta(img):
     alpha = 1.2
 
     return alpha, beta
+
+
+def simplify_contour(contour, n_corners=4):
+    """
+    Binary searches best `epsilon` value to force contour
+        approximation contain exactly `n_corners` points.
+
+    :param contour: OpenCV2 contour.
+    :param n_corners: Number of corners (points) the contour must contain.
+
+    :returns: Simplified contour in successful case. Otherwise returns initial contour.
+    """
+    n_iter, max_iter = 0, 100
+    lb, ub = 0., 1.
+
+    while True:
+        n_iter += 1
+        if n_iter > max_iter:
+            return contour
+
+        k = (lb + ub)/2.
+        eps = k*cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, eps, True)
+
+        if len(approx) > n_corners:
+            lb = (lb + ub)/2.
+        elif len(approx) < n_corners:
+            ub = (lb + ub)/2.
+        else:
+            return approx

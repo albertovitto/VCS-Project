@@ -12,7 +12,7 @@ if __name__ == '__main__':
     # video_name = '005/GOPR2045.MP4'
     # video_name = '012/IMG_4086.MOV'
     # video_name = '005/GOPR2051.MP4'
-    # video_name = '004/IMG_3803.MOV'
+    # video_name = '004/IMG_3803.MOV'  # statua
     # video_name = '008/VIRB0419.MP4'
     # video_name = '008/VIRB0427.MP4'
     # video_name = '012/IMG_4080.MOV'
