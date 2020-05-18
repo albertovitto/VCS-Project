@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     lost_frames = 0
     pos_frames = 0
-    skip_frames = False
+    skip_frames = True
     while video.isOpened():
         ret, frame = video.read()
 

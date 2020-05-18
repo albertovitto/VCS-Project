@@ -72,7 +72,7 @@ def get_bb(img, include_steps=False):
 
                 roi = get_roi(candidate_bounding_boxes[index], img)
                 rois.append(roi)
-                bbs.append(candidate_bounding_boxes[index])
+                bbs.append(list(candidate_bounding_boxes[index]))  # tuple non è modificabile => list
 
     if include_steps:
         hstack1 = multiple_show.horizontal_stack(blur, th)

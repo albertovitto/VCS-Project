@@ -8,6 +8,7 @@ from Luca.vcsp.people_detection.YOLOv3.darknet import Darknet
 from Luca.vcsp.people_detection.YOLOv3.preprocess import letterbox_image
 from Luca.vcsp.people_detection.YOLOv3.util import write_results, load_classes
 from Luca.vcsp.utils.drawing import draw_bb
+from Luca.vcsp.painting_detection.detection import get_bb
 
 
 def prep_image(img, inp_dim):
@@ -38,6 +39,23 @@ def write(x, img):
 
     img = draw_bb(img, tl=c1, br=c2, color=(0, 255, 0), label="person")
     return img
+
+
+def intersection_area(box1, box2):
+
+    # Get the coordinates of bounding boxes
+    b1_x1, b1_y1, b1_x2, b1_y2 = box1[0], box1[1], box1[2], box1[3]
+    b2_x1, b2_y1, b2_x2, b2_y2 = box2[0], box2[1], box2[2], box2[3]
+
+    # get the corrdinates of the intersection rectangle
+    inter_rect_x1 = max(b1_x1, b2_x1)
+    inter_rect_y1 = max(b1_y1, b2_y1)
+    inter_rect_x2 = min(b1_x2, b2_x2)
+    inter_rect_y2 = min(b1_y2, b2_y2)
+
+    # Intersection area
+    inter_area = abs(max(inter_rect_x2 - inter_rect_x1 + 1, 0) * max(inter_rect_y2 - inter_rect_y1 + 1, 0))
+    return inter_area
 
 
 class PeopleDetector:
@@ -94,19 +112,32 @@ class PeopleDetector:
             output[i, [1, 3]] = torch.clamp(output[i, [1, 3]], 0.0, im_dim[i, 0])
             output[i, [2, 4]] = torch.clamp(output[i, [2, 4]], 0.0, im_dim[i, 1])
 
+        _, _, painting_bbs = get_bb(frame)
+
+        for painting_bb in painting_bbs:
+            painting_bb[2] = painting_bb[0] + painting_bb[2]
+            painting_bb[3] = painting_bb[1] + painting_bb[3]
+            draw_bb(orig_im, tl=(painting_bb[0], painting_bb[1]), br=(painting_bb[2], painting_bb[3]), color=(255, 0, 0), label="painting")
+
         for detect_obj in output:
-            tl = tuple(detect_obj[1:3].int())
-            br = tuple(detect_obj[3:5].int())
+            person_bb = [int(detect_obj[1].item()), int(detect_obj[2].item()), int(detect_obj[3].item()), int(detect_obj[4].item())]
 
             cls = int(detect_obj[-1])
             if cls != 0:  # not PERSON
                 continue
 
-            area_bb = (br[0] - tl[0]) * (br[1] - tl[1])
-            if area_bb == 0:
+            person_bb_area = (person_bb[2] - person_bb[0]) * (person_bb[3] - person_bb[1])
+            if person_bb_area == 0:
                 continue
 
-            draw_bb(orig_im, tl, br, color=(0, 255, 0), label="person")
+            is_person = True
+            for painting_bb in painting_bbs:
+                if intersection_area(person_bb, painting_bb) >= person_bb_area:
+                    is_person = False
+                    break
+
+            if is_person:
+                draw_bb(orig_im, tl=(person_bb[0], person_bb[1]), br=(person_bb[2], person_bb[3]), color=(0, 0, 255), label="person")
 
         return orig_im
 
