@@ -11,7 +11,7 @@ def main():
     # 000/VIRB0400.MP4  000/VIRB0406.MP4 720  002/20180206_114720.mp4
     # 005/GOPR2043.MP4 1080  011/3.mp4 2k
 
-    video_path = "dataset/videos/000/VIRB0400.MP4"
+    video_path = "dataset/videos/003/GOPR1929.MP4"
     #video_path = "dataset/videos/000/VIRB0406.MP4"
     #video_path = 'dataset/videos/001/GOPR5826.MP4'
     # video_path = "dataset/videos/002/20180206_114720.mp4"

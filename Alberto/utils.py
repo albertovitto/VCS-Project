@@ -44,10 +44,10 @@ def stack_frames(*argv):
                 frames_seen += 1
 
     while stacked_frames.shape[1] > 1920:
-        stacked_frames = resize_image(scale_percent=90, stacked_frames)
+        stacked_frames = resize_image(90, stacked_frames)
 
     while stacked_frames.shape[0] > 960:
-        stacked_frames = resize_image(scale_percent=90, stacked_frames)
+        stacked_frames = resize_image(90, stacked_frames)
 
     return stacked_frames
     # a = np.hstack((gray_bw, closing, morph_grad))
