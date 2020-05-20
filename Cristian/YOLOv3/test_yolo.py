@@ -63,7 +63,49 @@ class Yolo():
         img_ = torch.from_numpy(img_).float().div(255.0).unsqueeze(0)
         return img_, orig_im, dim
 
-    def retrieve_people_bb(self, frame):
+    @staticmethod
+    def intersection_over_person(painting, person):
+        # inspired by https://gist.github.com/meyerjo/dd3533edc97c81258898f60d8978eddc
+        A = painting
+        B = person
+
+        # top-left coord of box A/B
+        x1a, y1a, wa, ha = A
+        x1b, y1b, wb, hb = B
+
+        # bottom-right coord of box A/B
+        x2a = x1a + wa
+        y2a = y1a + ha
+        x2b = x1b + wb
+        y2b = y1b + hb
+
+        # top-left coord of intersection
+        x1i = max(x1a, x1b)
+        y1i = max(y1a, y1b)
+
+        # bottom-right coord og intersection
+        x2i = min(x2a, x2b)
+        y2i = min(y2a, y2b)
+
+        areaI = abs(max((x2i - x1i, 0)) * max((y2i - y1i), 0))
+        areaB = wb * hb
+
+        if areaB == 0:
+            return 0
+        return areaI / float(areaB)
+
+    def check_bbs_iop(self, paintings, people):
+        selected_people = []
+        for person in people:
+            selected_people.append(person)
+            for painting in paintings:
+                iop = self.intersection_over_person(painting, person)
+                if iop == 1:
+                    selected_people.pop()
+                    break
+        return selected_people
+
+    def retrieve_people_bb(self, frame, painting_bbs=None):
         img, orig_im, dim = self.prep_image(frame, self.inp_dim)
 
         im_dim = torch.FloatTensor(dim).repeat(1, 2)
@@ -92,7 +134,7 @@ class Yolo():
             output[i, [1, 3]] = torch.clamp(output[i, [1, 3]], 0.0, im_dim[i, 0])
             output[i, [2, 4]] = torch.clamp(output[i, [2, 4]], 0.0, im_dim[i, 1])
 
-        bb = []
+        bbs = []
         for x in output:
             if int(x[7].item()) != 0:
                 continue
@@ -102,52 +144,12 @@ class Yolo():
             y2 = int(x[4].item())
             w = x2 - x1
             h = y2 - y1
-            bb.append((x1, y1, w, h))
+            bbs.append((x1, y1, w, h))
 
-        return bb
+        if painting_bbs is not None:
+            bbs = self.check_bbs_iop(paintings=painting_bbs, people=bbs)
 
-
-def intersection_over_person(painting, person):
-    # inspired by https://gist.github.com/meyerjo/dd3533edc97c81258898f60d8978eddc
-    A = painting
-    B = person
-
-    # top-left coord of box A/B
-    x1a, y1a, wa, ha = A
-    x1b, y1b, wb, hb = B
-
-    # bottom-right coord of box A/B
-    x2a = x1a + wa
-    y2a = y1a + ha
-    x2b = x1b + wb
-    y2b = y1b + hb
-
-    # top-left coord of intersection
-    x1i = max(x1a, x1b)
-    y1i = max(y1a, y1b)
-
-    # bottom-right coord og intersection
-    x2i = min(x2a, x2b)
-    y2i = min(y2a, y2b)
-
-    areaI = abs(max((x2i - x1i, 0)) * max((y2i - y1i), 0))
-    areaB = wb * hb
-
-    if areaB == 0:
-        return 0
-    return areaI / float(areaB)
-
-
-def check_bbs_iou(paintings, people, threshold=0.7):
-    selected_people = []
-    for person in people:
-        selected_people.append(person)
-        for painting in paintings:
-            iop = intersection_over_person(painting, person)
-            if iop > threshold:
-                selected_people.pop()
-                break
-    return selected_people
+        return bbs
 
 
 if __name__ == '__main__':
@@ -187,10 +189,8 @@ if __name__ == '__main__':
 
         if ret:
             output, rois, bbs = get_bb(frame, include_steps=False)
-            people_bb = yolo.retrieve_people_bb(frame)
-            people_bb = check_bbs_iou(paintings=bbs, people=people_bb)
-            # print(people_bb)
-            for bb in people_bb:
+            people_bbs = yolo.retrieve_people_bb(frame, painting_bbs=bbs)
+            for bb in people_bbs:
                 x, y, w, h = bb
                 draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(0, 0, 255), label="person")
             cv2.imshow("Painting detection", output)
