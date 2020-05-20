@@ -3,6 +3,8 @@ import os
 import numpy as np
 import cv2
 
+from Luca.vcsp.painting_detection.detection import get_bb
+
 
 VIDEOS_FOLDER_PATH = os.path.join('..', '..', 'dataset', 'videos')
 TEST_SET_FOLDER_PATH = os.path.join('..', '..', 'dataset', 'painting_detection_test_set')
@@ -85,7 +87,77 @@ def create_test_set(videos_path_list):
     print("Creating test set ... Done.")
 
 
-def eval_test_set():
+def yolo_format_decoder(record, img_shape):
+    cls = record[0]
+    center_x = record[1]
+    center_y = record[2]
+    w = record[3]
+    h = record[4]
+
+    img_h = img_shape[0]
+    img_w = img_shape[1]
+
+    w = int(img_w * w)
+    h = int(img_h * h)
+    x = int(img_w * center_x - w / 2)
+    y = int(img_h * center_y - h / 2)
+
+    return cls, x, y, w, h
+
+
+def eval_test_set(iou_threshold=0.5):
+
+    test_set_dict = {}
+    for filename in os.listdir(TEST_SET_FOLDER_PATH):
+        video_index, frame_index = filename.split("_", 1)
+        frame_index, _ = frame_index.split(".", 1)
+        if (int(video_index) == 9 and int(frame_index) >= 27) or int(video_index) >= 10:  # Luca's frames
+            if video_index in test_set_dict:
+                test_set_dict[video_index].append(frame_index)
+            else:
+                test_set_dict[video_index] = [frame_index]
+
+    results = {}
+    avg_precision = 0
+    avg_recall = 0
+    for video in test_set_dict.keys():
+        print(video)
+        results[video] = {'TP': 0, 'FP': 0, 'FN': 0, 'TN': 0}
+        video_test_set = test_set_dict[video]
+
+        for frame in video_test_set:
+            img = cv2.imread(os.path.join(TEST_SET_FOLDER_PATH, "{}_{}.png".format(video, frame)))
+            _, _, painting_bbs = get_bb(img, include_steps=False)
+
+            gt_bbs = get_ground_truth_bbs(video, frame, img.shape)
+            gt_painting_bbs = gt_bbs[0]
+
+            for bb in painting_bbs:
+                iou_scores = []
+                for gt_bb in gt_painting_bbs:
+                    iou = bb_iou(bb, gt_bb)
+                    iou_scores.append(iou)
+
+                if len(iou_scores) != 0 and np.max(iou_scores) >= iou_threshold:
+                    results[video]['TP'] += 1
+                    gt_painting_bbs.pop(np.argmax(iou_scores))
+                else:
+                    results[video]['FP'] += 1
+
+            results[video]['FN'] += len(gt_painting_bbs)
+
+        TP, FP, FN, TN = results[video].values()
+        print(TP, FP, FN, TN)
+        precision = TP / (TP + FP)
+        recall = TP / (TP + FN)
+        print(precision, recall)
+        avg_precision += precision
+        avg_recall += recall
+
+    avg_precision = avg_precision / len(test_set_dict.keys())
+    avg_recall = avg_recall / len(test_set_dict.keys())
+
+    return avg_precision, avg_recall
 
     """
     for each IMG in TEST_SET_FOLDER_PATH:
@@ -112,4 +184,50 @@ def eval_test_set():
     calculate AVERAGE PRECISION and RECALL for test set
 
     """
+
+
+def bb_iou(box1, box2):
+    # Get the coordinates of bounding boxes
+    b1_x1, b1_y1, b1_x2, b1_y2 = box1[0], box1[1], box1[0] + box1[2], box1[1] + box1[3]
+    b2_x1, b2_y1, b2_x2, b2_y2 = box2[0], box2[1], box2[0] + box2[2], box2[1] + box2[3]
+
+    # get the corrdinates of the intersection rectangle
+    inter_rect_x1 = max(b1_x1, b2_x1)
+    inter_rect_y1 = max(b1_y1, b2_y1)
+    inter_rect_x2 = min(b1_x2, b2_x2)
+    inter_rect_y2 = min(b1_y2, b2_y2)
+
+    # Intersection area
+    inter_area = abs(max(inter_rect_x2 - inter_rect_x1 + 1, 0) * max(inter_rect_y2 - inter_rect_y1 + 1, 0))
+
+    # Union Area
+    b1_area = (b1_x2 - b1_x1 + 1) * (b1_y2 - b1_y1 + 1)
+    b2_area = (b2_x2 - b2_x1 + 1) * (b2_y2 - b2_y1 + 1)
+
+    iou = inter_area / (b1_area + b2_area - inter_area)
+    return iou
+
+
+def get_ground_truth_bbs(video_name, frame_name, test_img_shape):
+    # 0 = painting
+    # 1 = person
+    # 2 = statue
+    bbs = {0: [], 1: [], 2: []}
+
+    try:
+        file = open(os.path.join(GROUND_TRUTH_FOLDER_PATH, "{}_{}.txt".format(video_name, frame_name)), "r")
+    except FileNotFoundError:
+        print("Ground truth file not found.")
+        return bbs
+
+    lines = file.readlines()
+    for line in lines:
+        chunks = line.split(" ")
+        yolo_record = (int(chunks[0]), float(chunks[1]), float(chunks[2]), float(chunks[3]), float(chunks[4]))
+        decoded_bb = yolo_format_decoder(yolo_record, test_img_shape)
+        bbs[decoded_bb[0]].append(decoded_bb[1:])
+
+    file.close()
+
+    return bbs
 
