@@ -43,7 +43,7 @@ if __name__ == '__main__':
                     retrieved_img = cv2.imread("../dataset/paintings_db/{}".format(retrieved_img_filename))
                     warped, out = sift_feature_matching_and_homography(roi, retrieved_img)
                     if warped is not None:
-                        title, author, room = get_painting_info_from_csv(retrieved_img_filename)
+                        title, author, room = get_painting_info_from_csv(number)
                         if title is not None:
                             h, w, _ = warped.shape
                             cv2.putText(warped, title, (10, h - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0),

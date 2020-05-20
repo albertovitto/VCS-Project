@@ -2,10 +2,12 @@ import cv2
 import numpy as np
 from pandas import read_csv
 from Luca.vcsp.painting_retrieval.utils import get_unrolled_range_arr
+import os
 
 
-def get_painting_info_from_csv(filename):
-    df = read_csv("../dataset/data.csv")
+def get_painting_info_from_csv(painting_id, path='../dataset/data.csv'):
+    filename = "{:03d}.png".format(painting_id)
+    df = read_csv(path)
     row = df.loc[df['Image'] == filename]
     return row['Title'].values[0], row['Author'].values[0], row['Room'].values[0]
 
@@ -131,11 +133,42 @@ def retrieve_img_brute_force(roi):
     cv2.waitKey(-1)
 
 
+def FORMER_create_all_features_db(db_dir_name):
+    imgs_path_list = []
+    for filename in os.listdir(db_dir_name):
+        imgs_path_list.append(db_dir_name + filename)
+
+    sift = cv2.xfeatures2d.SIFT_create()
+
+    features_db = []
+    features_range = []
+    features_range.append(0)
+
+    len_dsc_prev = 0
+    for i, p in enumerate(imgs_path_list):
+        img = cv2.imread(p)
+        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        kp, dsc = sift.detectAndCompute(gray_img, None)
+        features_db.extend(dsc)
+        if i > 0:
+            features_range.append(len_dsc_prev + features_range[i - 1])
+        len_dsc_prev = len(dsc)
+
+    np.save('../dataset/all_features_db.npy', features_db)
+    np.save('../dataset/range_features_db.npy', features_range)
+    return features_db, features_range
+
+
 def retrieve(img):
     sift = cv2.xfeatures2d.SIFT_create()
 
-    features_db = np.load('../dataset/all_features_db.npy')
-    features_range = np.load('../dataset/range_features_db.npy')
+    try:
+        features_db = np.load('../dataset/all_features_db.npy')
+        features_range = np.load('../dataset/range_features_db.npy')
+    except IOError:
+        print("Creating features db ...")
+        features_db, features_range = FORMER_create_all_features_db("../dataset/paintings_db/")
+        print("Done")
 
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     h, w = gray_img.shape
