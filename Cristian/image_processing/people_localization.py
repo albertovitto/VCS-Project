@@ -78,6 +78,10 @@ def get_room_id(weights, painting_retrievals, voting=False):
         for i, pr in enumerate(painting_retrievals):
             _, _, room = get_painting_info_from_csv(pr, path=path)
             votes[room - 1] += weights[i]
+        print("Votes:\n")
+        for i, v in enumerate(votes):
+            print("Room #{} = {}".format(i + 1, v))
+
         room = np.argmax(votes) + 1
         return room
 

@@ -1,19 +1,12 @@
-import time
-
-import numpy as np
-import cv2
-
 from Luca.vcsp.painting_retrieval.retrieval import PaintingRetrieval
 from Luca.vcsp.painting_detection.detection import get_bb
+from Luca.vcsp.people_localization.utils import highlight_map_room
 from Luca.vcsp.utils.drawing import draw_bb
 from Luca.vcsp.utils.multiple_show import show_on_row
-
-import torch
-from torch.autograd import Variable
-import random
+import Cristian.image_processing.people_localization as pl
 from Cristian.YOLOv3.util import *
 from Cristian.YOLOv3.darknet import Darknet
-from Cristian.YOLOv3.preprocess import prep_image, inp_to_image, letterbox_image
+from Cristian.YOLOv3.preprocess import letterbox_image
 
 
 class Yolo():
@@ -161,7 +154,7 @@ if __name__ == '__main__':
     retrieval.train()
 
     # video_name = '000/VIRB0393.MP4'
-    # video_name = '001/GOPR5826.MP4'
+    video_name = '001/GOPR5826.MP4'
     # video_name = '005/GOPR2045.MP4'
     # video_name = '012/IMG_4086.MOV'
     # video_name = '005/GOPR2051.MP4'
@@ -169,7 +162,7 @@ if __name__ == '__main__':
     # video_name = '008/VIRB0419.MP4'
     # video_name = '008/VIRB0427.MP4'
     # video_name = '012/IMG_4080.MOV'
-    video_name = '002/20180206_114720.mp4'
+    # video_name = '002/20180206_114720.mp4'
 
     video_path = '../../dataset/videos/%s' % video_name
 
@@ -192,7 +185,8 @@ if __name__ == '__main__':
             people_bbs = yolo.retrieve_people_bb(frame, painting_bbs=bbs)
             for bb in people_bbs:
                 x, y, w, h = bb
-                draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(0, 0, 255), label="person")
+                if np.any(bb):
+                    draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(0, 0, 255), label="person")
             cv2.imshow("Painting detection", output)
 
             key = cv2.waitKey(1)
@@ -201,6 +195,7 @@ if __name__ == '__main__':
             if key == ord('p'):  # pause
                 cv2.waitKey(-1)
             if key == ord('r'):  # show rois with image retrieval
+                retrievals = []
                 for i, roi in enumerate(rois):
                     rank, _ = retrieval.predict(roi)
                     cv2.putText(roi, "{}".format(i), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3,
@@ -208,10 +203,18 @@ if __name__ == '__main__':
                     print("Roi {} - rank = {}".format(i, rank))
                     ground_truth = cv2.imread('../../dataset/paintings_db/' + "{:03d}.png".format(rank[0]))
                     cv2.imshow("Roi {}".format(i), show_on_row(roi, ground_truth))
+                    retrievals.append(rank[0])
+                # for bb in people_bbs:
+                # USING FAKE PERSON BB
+                room = pl.localize_person((200, 200, 200, 200), bbs, retrievals,
+                                          distance=pl.CENTER_DISTANCE,
+                                          weighting=pl.AREA,
+                                          voting=True)
+                map_img = highlight_map_room(room)
+                cv2.imshow("Map", map_img)
                 cv2.waitKey(-1)
                 for i, roi in enumerate(rois):
                     cv2.destroyWindow("Roi {}".format(i))
-
             if skip_frames:
                 pos_frames += video.get(cv2.CAP_PROP_FPS)
                 video.set(cv2.CAP_PROP_POS_FRAMES, pos_frames)
