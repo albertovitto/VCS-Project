@@ -1,4 +1,5 @@
 import os
+import copy
 
 import numpy as np
 import cv2
@@ -39,9 +40,12 @@ def get_map_rooms_coords():
 
 def highlight_map_room(room_number):
     map_img = cv2.imread(MAP_IMG_PATH)
+    overlay = copy.deepcopy(map_img)
+    alpha = 0.5
 
     if room_number in get_map_rooms_coords().keys():
         tl_x, tl_y, br_x, br_y = get_map_rooms_coords()[room_number]
-        cv2.rectangle(map_img, (tl_x, tl_y), (br_x, br_y), (79, 79, 255), -1)
+        cv2.rectangle(overlay, (tl_x, tl_y), (br_x, br_y), (79, 79, 255), -1)
+        cv2.addWeighted(overlay, alpha, map_img, 1 - alpha, 0, map_img)
 
     return map_img
