@@ -3,15 +3,38 @@ import cv2
 import copy
 from Luca.vcsp.painting_detection.utils import is_painting, get_roi
 from Luca.vcsp.utils import multiple_show
-from Luca.vcsp.painting_detection.constants import MIN_HULL_AREA_PERCENT
-from Luca.vcsp.painting_detection.utils import frame_process, simplify_contour
-# from Cristian.image_processing.cri_processing_strat import frame_process
+from Luca.vcsp.painting_detection.constants import conf
+from Luca.vcsp.painting_detection.utils import frame_process, frame_preprocess, simplify_contour
+#from Cristian.image_processing.cri_processing_strat import frame_process
 from Luca.vcsp.utils.drawing import draw_bb
+
+
+def alb_frame_process(frame):
+    h, w, c = frame.shape
+    original = frame.copy()
+
+    gray_bw = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray_rgb = cv2.cvtColor(gray_bw, cv2.COLOR_GRAY2BGR)
+
+    denoised = cv2.fastNlMeansDenoising(
+        gray_bw, h=70, templateWindowSize=7, searchWindowSize=5)
+
+    adap_th = cv2.adaptiveThreshold(
+        denoised, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 45, 5
+    )
+
+    kernel = np.ones((3, 3), np.uint8)
+    closing = cv2.morphologyEx(adap_th, cv2.MORPH_CLOSE, kernel,
+                               iterations=8, borderType=cv2.BORDER_CONSTANT, borderValue=0)
+    morph_grad = cv2.morphologyEx(closing, cv2.MORPH_GRADIENT, kernel,
+                                  iterations=5, borderType=cv2.BORDER_CONSTANT, borderValue=0)
+
+    return denoised, adap_th, morph_grad
 
 
 def get_bb(img, include_steps=False):
 
-    blur, th, morph = frame_process(img)
+    blur, th, morph = frame_preprocess(img)
 
     _, contours, _ = cv2.findContours(morph, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -46,15 +69,11 @@ def get_bb(img, include_steps=False):
         if len(candidate_hulls) != 0:
             max_hull_area = cv2.contourArea(max(candidate_hulls, key=cv2.contourArea))
 
-            # x*1920*1080+y=0.01
-            # x*1280*720+y=0.1
-            x = -1 / 12800000
-            y = 43 / 250
             img_area = img.shape[0] * img.shape[1]
-            img_percent = x * img_area + y
             for i, c in enumerate(candidate_hulls):
                 hull_area = cv2.contourArea(candidate_hulls[i])
-                if hull_area < max_hull_area * MIN_HULL_AREA_PERCENT or hull_area < img_area * img_percent:
+                if hull_area < max_hull_area * conf["MIN_HULL_AREA_PERCENT_OF_MAX_HULL"] \
+                        or hull_area < img_area * conf["MIN_HULL_AREA_PERCENT_OF_IMG"]:
                     continue
                 else:
                     found.append(i)

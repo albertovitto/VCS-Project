@@ -1,9 +1,13 @@
 import os
+import time
+import itertools
 
 import numpy as np
 import cv2
+from sklearn.externals.joblib import parallel_backend, Parallel, delayed
 
 from Luca.vcsp.painting_detection.detection import get_bb
+from Luca.vcsp.painting_detection.constants import conf
 
 
 VIDEOS_FOLDER_PATH = os.path.join('..', '..', 'dataset', 'videos')
@@ -87,105 +91,6 @@ def create_test_set(videos_path_list):
     print("Creating test set ... Done.")
 
 
-def yolo_format_decoder(record, img_shape):
-    cls = record[0]
-    center_x = record[1]
-    center_y = record[2]
-    w = record[3]
-    h = record[4]
-
-    img_h = img_shape[0]
-    img_w = img_shape[1]
-
-    w = int(img_w * w)
-    h = int(img_h * h)
-    x = int(img_w * center_x - w / 2)
-    y = int(img_h * center_y - h / 2)
-
-    return cls, x, y, w, h
-
-
-def eval_test_set(iou_threshold=0.5):
-
-    test_set_dict = {}
-    for filename in os.listdir(TEST_SET_FOLDER_PATH):
-        video_index, frame_index = filename.split("_", 1)
-        frame_index, _ = frame_index.split(".", 1)
-        if (int(video_index) == 9 and int(frame_index) >= 27) or int(video_index) >= 10:  # Luca's frames
-            if video_index in test_set_dict:
-                test_set_dict[video_index].append(frame_index)
-            else:
-                test_set_dict[video_index] = [frame_index]
-
-    results = {}
-    avg_precision = 0
-    avg_recall = 0
-    for video in test_set_dict.keys():
-        print(video)
-        results[video] = {'TP': 0, 'FP': 0, 'FN': 0, 'TN': 0}
-        video_test_set = test_set_dict[video]
-
-        for frame in video_test_set:
-            img = cv2.imread(os.path.join(TEST_SET_FOLDER_PATH, "{}_{}.png".format(video, frame)))
-            _, _, painting_bbs = get_bb(img, include_steps=False)
-
-            gt_bbs = get_ground_truth_bbs(video, frame, img.shape)
-            gt_painting_bbs = gt_bbs[0]
-
-            for bb in painting_bbs:
-                iou_scores = []
-                for gt_bb in gt_painting_bbs:
-                    iou = bb_iou(bb, gt_bb)
-                    iou_scores.append(iou)
-
-                if len(iou_scores) != 0 and np.max(iou_scores) >= iou_threshold:
-                    results[video]['TP'] += 1
-                    gt_painting_bbs.pop(np.argmax(iou_scores))
-                else:
-                    results[video]['FP'] += 1
-
-            results[video]['FN'] += len(gt_painting_bbs)
-
-        TP, FP, FN, TN = results[video].values()
-        print(TP, FP, FN, TN)
-        precision = TP / (TP + FP)
-        recall = TP / (TP + FN)
-        print(precision, recall)
-        avg_precision += precision
-        avg_recall += recall
-
-    avg_precision = avg_precision / len(test_set_dict.keys())
-    avg_recall = avg_recall / len(test_set_dict.keys())
-
-    return avg_precision, avg_recall
-
-    """
-    for each IMG in TEST_SET_FOLDER_PATH:
-
-        extract PREDICTED BB with get_bb(IMG)
-        extract GOUND TRUTH BB from annotation file
-
-        for each PREDICTED BB:
-            for each GROUND TRUTH BB:
-                calculate IOU
-
-            extract GROUND TRUTH BB with maximum IOU
-            if >= THRESHOLD (0.5):
-                found TP
-                remove this GROUND TRUTH BB
-            else:
-                found FP
-
-        if GROUND TRUTH BB is not empty:
-            found FN(s)
-
-        calculate PRECISION and RECALL for IMG
-
-    calculate AVERAGE PRECISION and RECALL for test set
-
-    """
-
-
 def bb_iou(box1, box2):
     # Get the coordinates of bounding boxes
     b1_x1, b1_y1, b1_x2, b1_y2 = box1[0], box1[1], box1[0] + box1[2], box1[1] + box1[3]
@@ -230,4 +135,173 @@ def get_ground_truth_bbs(video_name, frame_name, test_img_shape):
     file.close()
 
     return bbs
+
+
+def yolo_format_decoder(record, img_shape):
+    cls = record[0]
+    center_x = record[1]
+    center_y = record[2]
+    w = record[3]
+    h = record[4]
+
+    img_h = img_shape[0]
+    img_w = img_shape[1]
+
+    w = int(img_w * w)
+    h = int(img_h * h)
+    x = int(img_w * center_x - w / 2)
+    y = int(img_h * center_y - h / 2)
+
+    return cls, x, y, w, h
+
+
+def eval_test_set(iou_threshold=0.5, include_partial_results=False):
+
+    test_set_dict = {}
+    for filename in os.listdir(TEST_SET_FOLDER_PATH):
+        video_index, frame_index = filename.split("_", 1)
+        frame_index, _ = frame_index.split(".", 1)
+        if int(video_index) != 11:  # 011 is a 2K video => computation too slow
+            if video_index in test_set_dict:
+                test_set_dict[video_index].append(frame_index)
+            else:
+                test_set_dict[video_index] = [frame_index]
+
+    results = {}
+    avg_precision = 0
+    avg_recall = 0
+    for video in test_set_dict.keys():
+        results[video] = {'TP': 0, 'FP': 0, 'FN': 0, 'TN': 0}
+        video_test_set = test_set_dict[video]
+
+        for frame in video_test_set:
+            img = cv2.imread(os.path.join(TEST_SET_FOLDER_PATH, "{}_{}.png".format(video, frame)))
+            _, _, painting_bbs = get_bb(img, include_steps=False)
+
+            gt_bbs = get_ground_truth_bbs(video, frame, img.shape)
+            gt_painting_bbs = gt_bbs[0]
+
+            for bb in painting_bbs:
+                iou_scores = []
+                for gt_bb in gt_painting_bbs:
+                    iou = bb_iou(bb, gt_bb)
+                    iou_scores.append(iou)
+
+                if len(iou_scores) != 0 and np.max(iou_scores) >= iou_threshold:
+                    results[video]['TP'] += 1
+                    gt_painting_bbs.pop(np.argmax(iou_scores))
+                else:
+                    results[video]['FP'] += 1
+
+            results[video]['FN'] += len(gt_painting_bbs)
+
+        TP, FP, FN, TN = results[video].values()
+
+        precision = 1
+        if FP != 0:
+            precision = TP / (TP + FP)
+
+        recall = 1
+        if FN != 0:
+            recall = TP / (TP + FN)
+
+        avg_precision += precision
+        avg_recall += recall
+
+        if include_partial_results:
+            print("--- video {} ---".format(video))
+            print("TP FP FN TN")
+            print("{} {} {} {}".format(TP, FP, FN, TN))
+            print("p = {}, r = {}".format(precision, recall))
+            print("-----------------")
+
+    avg_precision = avg_precision / len(test_set_dict.keys())
+    avg_recall = avg_recall / len(test_set_dict.keys())
+
+    return avg_precision, avg_recall
+
+    """
+    for each IMG in TEST_SET_FOLDER_PATH:
+
+        extract PREDICTED BB with get_bb(IMG)
+        extract GOUND TRUTH BB from annotation file
+
+        for each PREDICTED BB:
+            for each GROUND TRUTH BB:
+                calculate IOU
+
+            extract GROUND TRUTH BB with maximum IOU
+            if >= THRESHOLD (0.5):
+                found TP
+                remove this GROUND TRUTH BB
+            else:
+                found FP
+
+        if GROUND TRUTH BB is not empty:
+            found FN(s)
+
+        calculate PRECISION and RECALL for IMG
+
+    calculate AVERAGE PRECISION and RECALL for test set
+
+    """
+
+
+def apply(x):
+    for key in x.keys():
+        conf[key] = x[key]
+
+    eval_test_set()
+
+
+def get_params():
+    params = {}
+
+    params["MIN_ROTATED_BOX_AREA_PERCENT"] = [0.7, 0.8, 0.9]
+    params["MIN_ROTATED_ELLIPSE_AREA_PERCENT"] = [0.5, 0.6, 0.7]
+    params["MIN_POLY_AREA_PERCENT"] = [0.5, 0.6, 0.7, 0.9]
+
+    return params
+
+
+def learn_best_detection():
+    param_grid = get_params()
+
+    keys, values = zip(*param_grid.items())
+
+    hyperparameters_list = []
+    for v in itertools.product(*values):
+        hyperparameters = dict(zip(keys, v))
+        hyperparameters_list.append(hyperparameters)
+
+    for i in range(0, len(hyperparameters_list), 4):
+        print(i)
+        start_time = time.time()
+        with parallel_backend('threading'):
+            Parallel()(delayed(apply)(x) for x in hyperparameters_list[i:i+4])
+
+        print("--- {} sec ---".format(time.time() - start_time))
+
+
+
+    """or min_rotated_box_area_percent in MIN_ROTATED_BOX_AREA_PERCENT:
+        constants.MIN_ROTATED_BOX_AREA_PERCENT = min_rotated_box_area_percent
+        for min_rotated_ellipse_area_percent in MIN_ROTATED_ELLIPSE_AREA_PERCENT:
+            constants.MIN_ROTATED_ELLIPSE_AREA_PERCENT = min_rotated_ellipse_area_percent
+
+            start_time = time.time()
+            with parallel_backend('threading'):
+                Parallel()(delayed(apply)(min_poly_area_percent) for min_poly_area_percent in MIN_POLY_AREA_PERCENT)
+
+            print("--- {} sec ---".format(time.time() - start_time))"""
+
+    """start_time = time.time()
+
+    avg_precision, avg_recall = eval_test_set()
+    print("-----")
+    print("{} {} {}".format(min_rotated_box_area_percent, min_rotated_ellipse_area_percent, min_poly_area_percent))
+    print("--- {} ---".format(time.time() - start_time))
+    print("precision = {}, recall = {}".format(avg_precision, avg_recall))
+    print("-----")"""
+
 

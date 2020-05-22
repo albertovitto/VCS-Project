@@ -6,7 +6,7 @@ from Luca.vcsp.painting_detection.evaluation import read_dict_for_test_set
 if __name__ == '__main__':
 
     # video_name = '000/VIRB0393.MP4'
-    # video_name = '001/GOPR5826.MP4'
+    video_name = '001/GOPR5826.MP4'
     # video_name = '005/GOPR2045.MP4'
     # video_name = '012/IMG_4086.MOV'
     # video_name = '005/GOPR2051.MP4'
@@ -16,10 +16,10 @@ if __name__ == '__main__':
     # video_name = '012/IMG_4080.MOV'
     # video_name = '002/20180206_114720.mp4'
 
-    # video_path = '../../dataset/videos/%s' % video_name
+    video_path = '../../dataset/videos/%s' % video_name
 
-    dict = read_dict_for_test_set()
-    video_path = dict['013']
+    # dict = read_dict_for_test_set()
+    # video_path = dict['010']
 
     video = cv2.VideoCapture(video_path)
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     lost_frames = 0
     pos_frames = 0
-    skip_frames = False
+    skip_frames = True
     while video.isOpened():
         ret, frame = video.read()
 
