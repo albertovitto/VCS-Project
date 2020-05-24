@@ -1,3 +1,4 @@
+import copy
 import os
 import time
 import itertools
@@ -122,7 +123,7 @@ def get_ground_truth_bbs(video_name, frame_name, test_img_shape):
     try:
         file = open(os.path.join(GROUND_TRUTH_FOLDER_PATH, "{}_{}.txt".format(video_name, frame_name)), "r")
     except FileNotFoundError:
-        print("Ground truth file not found.")
+        # print("Ground truth file not found.")
         return bbs
 
     lines = file.readlines()
@@ -247,25 +248,88 @@ def eval_test_set(iou_threshold=0.5, include_partial_results=False):
     """
 
 
+def eval_test_set_with_params(params, iou_threshold=0.5, include_partial_results=False):
+
+    test_set_dict = {}
+    for filename in os.listdir(TEST_SET_FOLDER_PATH):
+        video_index, frame_index = filename.split("_", 1)
+        frame_index, _ = frame_index.split(".", 1)
+        if int(video_index) != 11:  # 011 is a 2K video => computation too slow
+            if video_index in test_set_dict:
+                test_set_dict[video_index].append(frame_index)
+            else:
+                test_set_dict[video_index] = [frame_index]
+
+    results = {}
+    avg_precision = 0
+    avg_recall = 0
+    for video in test_set_dict.keys():
+        results[video] = {'TP': 0, 'FP': 0, 'FN': 0, 'TN': 0}
+        video_test_set = test_set_dict[video]
+
+        for frame in video_test_set:
+            img = cv2.imread(os.path.join(TEST_SET_FOLDER_PATH, "{}_{}.png".format(video, frame)))
+            _, _, painting_bbs = get_bb(img, params, include_steps=False)
+
+            gt_bbs = get_ground_truth_bbs(video, frame, img.shape)
+            gt_painting_bbs = gt_bbs[0]
+
+            for bb in painting_bbs:
+                iou_scores = []
+                for gt_bb in gt_painting_bbs:
+                    iou = bb_iou(bb, gt_bb)
+                    iou_scores.append(iou)
+
+                if len(iou_scores) != 0 and np.max(iou_scores) >= iou_threshold:
+                    results[video]['TP'] += 1
+                    gt_painting_bbs.pop(np.argmax(iou_scores))
+                else:
+                    results[video]['FP'] += 1
+
+            results[video]['FN'] += len(gt_painting_bbs)
+
+        TP, FP, FN, TN = results[video].values()
+
+        precision = 1
+        if FP != 0:
+            precision = TP / (TP + FP)
+
+        recall = 1
+        if FN != 0:
+            recall = TP / (TP + FN)
+
+        avg_precision += precision
+        avg_recall += recall
+
+        if include_partial_results:
+            print("--- video {} ---".format(video))
+            print("TP FP FN TN")
+            print("{} {} {} {}".format(TP, FP, FN, TN))
+            print("p = {}, r = {}".format(precision, recall))
+            print("-----------------")
+
+    avg_precision = avg_precision / len(test_set_dict.keys())
+    avg_recall = avg_recall / len(test_set_dict.keys())
+
+    return avg_precision, avg_recall
+
+
+def f1_score(precision, recall):
+    return 2 * (precision * recall) / (precision + recall)
+
+
 def apply(x):
+    print("Testing configuration {} ...".format(x))
+    params = copy.deepcopy(conf)
     for key in x.keys():
-        conf[key] = x[key]
+        params[key] = x[key]
 
-    eval_test_set()
-
-
-def get_params():
-    params = {}
-
-    params["MIN_ROTATED_BOX_AREA_PERCENT"] = [0.7, 0.8, 0.9]
-    params["MIN_ROTATED_ELLIPSE_AREA_PERCENT"] = [0.5, 0.6, 0.7]
-    params["MIN_POLY_AREA_PERCENT"] = [0.5, 0.6, 0.7, 0.9]
-
-    return params
+    avg_precision, avg_recall = eval_test_set_with_params(params=params)
+    f1 = f1_score(avg_precision, avg_recall)
+    print("f1 = {:.2f}, p = {:.2f}, r = {:.2f} for configuration {}".format(f1, avg_precision, avg_recall, x))
 
 
-def learn_best_detection():
-    param_grid = get_params()
+def learn_best_detection(param_grid):
 
     keys, values = zip(*param_grid.items())
 
@@ -274,13 +338,13 @@ def learn_best_detection():
         hyperparameters = dict(zip(keys, v))
         hyperparameters_list.append(hyperparameters)
 
+    start_time = time.time()
     for i in range(0, len(hyperparameters_list), 4):
-        print(i)
-        start_time = time.time()
+
         with parallel_backend('threading'):
             Parallel()(delayed(apply)(x) for x in hyperparameters_list[i:i+4])
 
-        print("--- {} sec ---".format(time.time() - start_time))
+    print("--- {} sec ---".format(time.time() - start_time))
 
 
 

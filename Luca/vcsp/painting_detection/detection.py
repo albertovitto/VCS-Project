@@ -32,7 +32,7 @@ def alb_frame_process(frame):
     return denoised, adap_th, morph_grad
 
 
-def get_bb(img, include_steps=False):
+def get_bb(img, params=conf, include_steps=False):
 
     blur, th, morph = frame_preprocess(img)
 
@@ -61,7 +61,7 @@ def get_bb(img, include_steps=False):
             if len(hull) > 5:
                 ellipse = cv2.fitEllipse(hull)
 
-            if is_painting(hull, poly, bounding_box, rotated_box, ellipse, img):
+            if is_painting(hull, poly, bounding_box, rotated_box, ellipse, img, params):
                 candidate_hulls.append(hull)
                 candidate_polys.append(poly)
                 candidate_bounding_boxes.append(bounding_box)
@@ -72,8 +72,8 @@ def get_bb(img, include_steps=False):
             img_area = img.shape[0] * img.shape[1]
             for i, c in enumerate(candidate_hulls):
                 hull_area = cv2.contourArea(candidate_hulls[i])
-                if hull_area < max_hull_area * conf["MIN_HULL_AREA_PERCENT_OF_MAX_HULL"] \
-                        or hull_area < img_area * conf["MIN_HULL_AREA_PERCENT_OF_IMG"]:
+                if hull_area < max_hull_area * params["MIN_HULL_AREA_PERCENT_OF_MAX_HULL"] \
+                        or hull_area < img_area * params["MIN_HULL_AREA_PERCENT_OF_IMG"]:
                     continue
                 else:
                     found.append(i)

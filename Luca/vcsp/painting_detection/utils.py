@@ -47,42 +47,42 @@ def get_roi(bounding_box, img):
     return roi
 
 
-def is_painting(hull, poly, bounding_box, rotated_box, ellipse, img):
+def is_painting(hull, poly, bounding_box, rotated_box, ellipse, img, params):
     # se CONVEX HULL e APPROXPOLY hanno meno di 3 vertici
-    if len(hull) <= conf["MIN_HULL_POINTS"] or len(poly) <= conf["MIN_POLY_POINTS"]:
+    if len(hull) <= params["MIN_HULL_POINTS"] or len(poly) <= params["MIN_POLY_POINTS"]:
         return False
 
     # se l'area di HULL è più piccola dell'80% (75%) dell'area del ROTATED MIN RECT
-    if cv2.contourArea(hull) < cv2.contourArea(rotated_box) * conf["MIN_ROTATED_BOX_AREA_PERCENT"]:  # non è un rettangolo
+    if cv2.contourArea(hull) < cv2.contourArea(rotated_box) * params["MIN_ROTATED_BOX_AREA_PERCENT"]:  # non è un rettangolo
         if ellipse is None:
             return False
         else:
             (x, y), (MA, ma), angle = ellipse
-            if cv2.contourArea(hull) < np.pi * MA/2 * ma/2 * conf["MIN_ROTATED_ELLIPSE_AREA_PERCENT"]:  # ma neanche un cerchio
+            if cv2.contourArea(hull) < np.pi * MA/2 * ma/2 * params["MIN_ROTATED_ELLIPSE_AREA_PERCENT"]:  # ma neanche un cerchio
                 return False
 
     # se l'area di POLY è più piccola dell'70% (60%) dell'area di HULL
-    if cv2.contourArea(poly) < cv2.contourArea(hull) * conf["MIN_POLY_AREA_PERCENT"]:
+    if cv2.contourArea(poly) < cv2.contourArea(hull) * params["MIN_POLY_AREA_PERCENT"]:
         return False
 
     # se il rapporto WIDTH / HEIGHT del BB è superiore a 3
     x, y, w, h = bounding_box
-    if w >= conf["MAX_RATIO_SIZE"] * h or h >= conf["MAX_RATIO_SIZE"] * w:
+    if w >= params["MAX_RATIO_SIZE"] * h or h >= params["MAX_RATIO_SIZE"] * w:
         return False
 
     # se il ROI è troppo luminoso/bianco (60% maggiore di 175)
     roi = get_roi(bounding_box, img)
     gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-    if np.percentile(gray_roi, 60) >= conf["MAX_GRAY_60_PERCENTILE"]:
+    if np.percentile(gray_roi, 60) >= params["MAX_GRAY_60_PERCENTILE"]:
         return False
 
     # se il ROI ha una varianza troppo bassa (minore di 10)
     blur_roi = cv2.GaussianBlur(roi, (7, 7), 0)
-    if np.mean(cv2.meanStdDev(blur_roi)[1]) < conf["MIN_VARIANCE"]:
+    if np.mean(cv2.meanStdDev(blur_roi)[1]) < params["MIN_VARIANCE"]:
         return False
 
     # se 3 lati del BB sono i bordi dell'immagine
-    if not conf["KEEP_PARTIAL"]:
+    if not params["KEEP_PARTIAL"]:
         if x == 0 and h == img.shape[0]:
             return False
         if x + w == img.shape[1] and h == img.shape[0]:
