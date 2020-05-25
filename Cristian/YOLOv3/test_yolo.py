@@ -1,3 +1,4 @@
+import os
 from Luca.vcsp.painting_retrieval.retrieval import PaintingRetrieval
 from Luca.vcsp.painting_detection.detection import get_bb
 from Luca.vcsp.people_localization.utils import highlight_map_room
@@ -10,16 +11,16 @@ from Cristian.YOLOv3.preprocess import letterbox_image
 
 
 class Yolo():
-    def __init__(self, confidence=0.5, nms_thesh=0.4, num_classes=80):
+    def __init__(self, confidence=0.5, nms_thesh=0.4, num_classes=80, yolo_path=""):
         self.confidence = confidence
         self.nms_thesh = nms_thesh
         self.CUDA = torch.cuda.is_available()
         self.num_classes = num_classes
-        self.classes = load_classes('data/coco.names')
+        self.classes = load_classes(os.path.join(yolo_path, 'data', 'coco.names'))
         self.bbox_attrs = 5 + self.num_classes
         print("Loading network.....")
-        self.model = Darknet('cfg/yolov3.cfg')
-        self.model.load_weights('yolov3.weights')
+        self.model = Darknet(os.path.join(yolo_path, 'cfg', 'yolov3.cfg'))
+        self.model.load_weights(os.path.join(yolo_path, 'yolov3.weights'))
         print("Network successfully loaded")
         self.model.net_info["height"] = "416"
         self.inp_dim = int(self.model.net_info["height"])
@@ -27,12 +28,12 @@ class Yolo():
         assert self.inp_dim > 32
         if self.CUDA:
             self.model.cuda()
-        self.model(self.get_test_input(self.inp_dim, self.CUDA), self.CUDA)
+        self.model(self.get_test_input(self.inp_dim, self.CUDA, yolo_path), self.CUDA)
         self.model.eval()
 
     @staticmethod
-    def get_test_input(input_dim, CUDA):
-        img = cv2.imread("dog-cycle-car.png")
+    def get_test_input(input_dim, CUDA, path):
+        img = cv2.imread(os.path.join(path, "dog-cycle-car.png"))
         img = cv2.resize(img, (input_dim, input_dim))
         img_ = img[:, :, ::-1].transpose((2, 0, 1))
         img_ = img_[np.newaxis, :, :, :] / 255.0
@@ -98,7 +99,7 @@ class Yolo():
                     break
         return selected_people
 
-    def retrieve_people_bb(self, frame, painting_bbs=None):
+    def get_people_bb(self, frame, painting_bbs=None):
         img, orig_im, dim = self.prep_image(frame, self.inp_dim)
 
         im_dim = torch.FloatTensor(dim).repeat(1, 2)
@@ -182,7 +183,7 @@ if __name__ == '__main__':
 
         if ret:
             output, rois, bbs = get_bb(frame, include_steps=False)
-            people_bbs = yolo.retrieve_people_bb(frame, painting_bbs=bbs)
+            people_bbs = yolo.get_people_bb(frame, painting_bbs=bbs)
             for bb in people_bbs:
                 x, y, w, h = bb
                 if np.any(bb):
@@ -209,7 +210,8 @@ if __name__ == '__main__':
                 room = pl.localize_person((200, 200, 200, 200), bbs, retrievals,
                                           distance=pl.CENTER_DISTANCE,
                                           weighting=pl.AREA,
-                                          voting=True)
+                                          voting=True,
+                                          verbose=True)
                 map_img = highlight_map_room(room)
                 cv2.imshow("Map", map_img)
                 cv2.waitKey(-1)

@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from Cristian.image_processing.retrieval_utils import get_painting_info_from_csv
 
@@ -10,7 +12,7 @@ AREA = 1
 SQRT_AREA = 2
 
 
-def get_weights(painting_bbs, mode=AREA):
+def get_weights(painting_bbs, mode=AREA, verbose=False):
     def area(bb):
         x, y, w, h = bb
         return w * h
@@ -23,14 +25,15 @@ def get_weights(painting_bbs, mode=AREA):
     else:
         W = np.asarray(W)
 
-    print("W   = {}".format(W))
+    if verbose:
+        print("Weights: {}".format(W))
     return W
 
 
-def apply_weights(distances, painting_bbs, mode=AREA):
+def apply_weights(distances, painting_bbs, mode=AREA, verbose=False):
     assert len(distances) == len(painting_bbs)
     if mode != NONE:
-        weights = get_weights(painting_bbs, mode=mode)
+        weights = get_weights(painting_bbs, mode=mode, verbose=verbose)
         # normalizing weights between 0 and 1,
         # otherwise multiplication may have very high results
         # and big gaps
@@ -43,11 +46,12 @@ def apply_weights(distances, painting_bbs, mode=AREA):
     else:
         weights = np.exp(-np.asarray(distances) / np.mean(distances))
 
-    print("D*W = {}".format(weights))
+    if verbose:
+        print("D*W : {}".format(weights))
     return weights
 
 
-def person_paintings_distances(person_bb, painting_bbs, metric=CENTER_DISTANCE):
+def person_paintings_distances(person_bb, painting_bbs, metric=CENTER_DISTANCE, verbose=False):
     def center(bb):
         x, y, w, h = bb
         return np.asarray((x + w // 2, y + h // 2))
@@ -58,13 +62,14 @@ def person_paintings_distances(person_bb, painting_bbs, metric=CENTER_DISTANCE):
     else:
         pass
 
-    print("D   = {}".format(distances))
+    if verbose:
+        print("Distances: {}".format(distances))
     return distances
 
 
-def get_room_id(weights, painting_retrievals, voting=False):
+def get_room_id(weights, painting_retrievals, path, voting=False, verbose=False):
     assert len(weights) == len(painting_retrievals)
-    path = '../../dataset/data.csv'
+    path = os.path.join(path, 'data.csv')
     if not voting:
         # FROM NUMPY DOCS:
         # In case of multiple occurrences of the minimum values,
@@ -78,22 +83,25 @@ def get_room_id(weights, painting_retrievals, voting=False):
         for i, pr in enumerate(painting_retrievals):
             _, _, room = get_painting_info_from_csv(pr, path=path)
             votes[room - 1] += weights[i]
-        print("Votes:\n")
-        for i, v in enumerate(votes):
-            print("Room #{} = {}".format(i + 1, v))
+
+        if verbose:
+            print("Votes:\n")
+            for i, v in enumerate(votes):
+                print("Room #{} = {}".format(i + 1, v))
 
         room = np.argmax(votes) + 1
         return room
 
 
-def localize_person(person_bb, painting_bbs, retrievals, distance=CENTER_DISTANCE, weighting=SQRT_AREA, voting=True):
+def localize_person(person_bb, painting_bbs, retrievals, distance=CENTER_DISTANCE, weighting=SQRT_AREA, voting=True,
+                    verbose=False, data_path='../../dataset'):
     assert len(painting_bbs) == len(retrievals)
     if len(painting_bbs) == 0:
         print("Cannot localize person with no painting detected")
         return None
-    distances = person_paintings_distances(person_bb, painting_bbs, metric=distance)
-    weights = apply_weights(distances, painting_bbs, mode=weighting)
-    room = get_room_id(weights, retrievals, voting=voting)
+    distances = person_paintings_distances(person_bb, painting_bbs, metric=distance, verbose=verbose)
+    weights = apply_weights(distances, painting_bbs, mode=weighting, verbose=verbose)
+    room = get_room_id(weights, retrievals, voting=voting, verbose=verbose, path=data_path)
     return room
 
 
@@ -102,7 +110,8 @@ def main():
     person = (1200, 100, 100, 100)
     paintings = [(600, 100, 100, 200), (1000, 50, 50, 100), (10, 700, 1000, 10)]
     retrievals = [0, 1, 2]  # rooms 19 21 20
-    room = localize_person(person, paintings, retrievals, distance=CENTER_DISTANCE, weighting=SQRT_AREA, voting=True)
+    room = localize_person(person, paintings, retrievals, distance=CENTER_DISTANCE, weighting=SQRT_AREA, voting=True,
+                           verbose=True)
     print("Room: {}".format(room))
 
 
