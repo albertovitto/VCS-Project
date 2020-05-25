@@ -16,18 +16,18 @@ def sift_feature_matching_and_homography(roi, img, include_steps=False):
     # https://docs.opencv.org/master/d1/de0/tutorial_py_feature_homography.html
     sift_roi = cv2.xfeatures2d_SIFT.create()
     kp_roi, des_roi = sift_roi.detectAndCompute(roi, None)
-    out_roi = cv2.drawKeypoints(roi, kp_roi, None)
 
     sift_img = cv2.xfeatures2d_SIFT.create()
     kp_img, des_img = sift_img.detectAndCompute(img, None)
-    out_img = cv2.drawKeypoints(img, kp_img, None)
 
-    if include_steps:
-        cv2.imshow('ROI', roi)
-        cv2.imshow('ROI + SIFT', out_roi)
-        cv2.imshow('IMG', img)
-        cv2.imshow('IMG + SIFT', out_img)
-        cv2.waitKey(-1)
+    # if include_steps:
+    #     out_roi = cv2.drawKeypoints(roi, kp_roi, None)
+    #     out_img = cv2.drawKeypoints(img, kp_img, None)
+    #     cv2.imshow('ROI', roi)
+    #     cv2.imshow('ROI + SIFT', out_roi)
+    #     cv2.imshow('IMG', img)
+    #     cv2.imshow('IMG + SIFT', out_img)
+    #     cv2.waitKey(-1)
 
     MIN_MATCH_COUNT = 10
     FLANN_INDEX_KDTREE = 1
@@ -48,7 +48,8 @@ def sift_feature_matching_and_homography(roi, img, include_steps=False):
         h, w, d = roi.shape
         pts = np.float32([[0, 0], [0, h - 1], [w - 1, h - 1], [w - 1, 0]]).reshape(-1, 1, 2)
         dst = cv2.perspectiveTransform(pts, M)
-        img = cv2.polylines(img, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)
+        if include_steps:
+            img = cv2.polylines(img, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)
     else:
         print("Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT))
         matchesMask = None
@@ -61,12 +62,10 @@ def sift_feature_matching_and_homography(roi, img, include_steps=False):
     if matchesMask:
         img_h, img_w, _ = img.shape
         warped = cv2.warpPerspective(src=roi, M=M, dsize=(img_w, img_h))
-        # cv2.imshow('WARPED', warped)
-
+        
     out = cv2.drawMatches(roi, kp_roi, img, kp_img, good, None, **draw_params)
+
     return warped, out
-    # cv2.imshow('OUT', out)
-    # cv2.waitKey(-1)
 
 
 def retrieve_img_brute_force(roi):

@@ -14,6 +14,7 @@ import cv2
 import numpy as np
 from Cristian.YOLOv3.test_yolo import Yolo
 import Cristian.image_processing.people_localization as pl
+from Cristian.image_processing.retrieval_utils import sift_feature_matching_and_homography
 from Luca.vcsp.painting_detection.detection import get_bb
 from Luca.vcsp.painting_retrieval.retrieval import PaintingRetrieval
 from Luca.vcsp.people_localization.utils import highlight_map_room
@@ -26,6 +27,7 @@ def arg_parse():
     parser.add_argument('--video', dest='video', help='path of the selected video', type=str, required=True)
     parser.add_argument('--include_steps', dest='include_steps', action='store_true',
                         help='toggles additional screens that show more info (like intermediate steps)')
+    parser.add_argument('--skip_frames', dest='skip_frames', action='store_true', help='toggles frame skip')
     return parser.parse_args()
 
 
@@ -51,15 +53,13 @@ def main():
     yolo = Yolo(yolo_path=os.path.join(path, "Cristian", "YOLOv3"))
 
     video_path = args.video
-
     video = cv2.VideoCapture(video_path)
-
     if not video.isOpened():
         print("Error: video not opened correctly")
 
     lost_frames = 0
     pos_frames = 0
-    skip_frames = True
+    skip_frames = args.skip_frames
 
     while video.isOpened():
         ret, frame = video.read()
@@ -68,9 +68,15 @@ def main():
             output, rois, painting_bbs = get_bb(frame, include_steps=args.include_steps)
             people_bbs = yolo.get_people_bb(frame, painting_bbs)
 
-            # TODO: Cristian will include this piece of code into get_people_bb and return both output and people_bbs
+            # TODO: Cristian should refactor this into a function
             for person_bb in people_bbs:
                 x, y, w, h = person_bb
+                if args.include_steps:
+                    fy, fx, _ = frame.shape
+                    x = x // 2 + fx // 2
+                    y = y // 2 + fy // 2
+                    w //= 2
+                    h //= 2
                 if np.any(person_bb):
                     draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(0, 0, 255), label="person")
 
@@ -88,7 +94,15 @@ def main():
                     cv2.putText(roi, "{}".format(i), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3, False)
                     print("Roi {} - rank = {}".format(i, rank))
                     ground_truth = cv2.imread(os.path.join(db_dir_path, "{:03d}.png".format(rank[0])))
-                    cv2.imshow("Roi {}".format(i), show_on_row(roi, ground_truth))
+                    warped, matches = sift_feature_matching_and_homography(roi, ground_truth,
+                                                                           include_steps=args.include_steps)
+                    if args.include_steps and warped is not None:
+                        out = show_on_row(matches, warped)
+                    elif warped is not None:
+                        out = show_on_row(show_on_row(roi, ground_truth), warped)
+                    else:
+                        out = show_on_row(roi, ground_truth)
+                    cv2.imshow("Roi {}".format(i), out)
                     retrievals.append(rank[0])
                 for person_bb in people_bbs:
                     room = pl.localize_person(person_bb, painting_bbs, retrievals,
@@ -99,11 +113,13 @@ def main():
                                               data_path=files_dir_path)
 
                     # FIXME: cannot read map because of path
-                    # Possible fix: path as function argument
-                    map_img = highlight_map_room(room)
+                    # Possible fix:
+                    # def highlight_map_room(room_number, map_path="../../dataset/"):
+                    #     path = os.path.join(map_path, "map.png")
+                    #     map_img = cv2.imread(path)
+                    # [...]
+                    map_img = highlight_map_room(room, map_path=files_dir_path)
                     cv2.imshow("People localization", map_img)
-
-                # TODO: add rectification (use include_steps to show SIFT matches)
 
                 cv2.waitKey(-1)
                 for i, roi in enumerate(rois):
