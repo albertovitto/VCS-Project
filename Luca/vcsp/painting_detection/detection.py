@@ -34,7 +34,7 @@ def alb_frame_process(frame):
 
 def get_bb(img, params=conf, include_steps=False):
 
-    blur, th, morph = frame_preprocess(img)
+    blur, th, morph = frame_preprocess(img, params)
 
     _, contours, _ = cv2.findContours(morph, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 

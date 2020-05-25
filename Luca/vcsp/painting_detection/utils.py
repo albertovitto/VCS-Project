@@ -22,7 +22,7 @@ def frame_process(img):
     return blur, th, morph
 
 
-def frame_preprocess(img):
+def frame_preprocess(img, params):
     alpha, beta = auto_alpha_beta(img)
     adjusted_img = cv2.convertScaleAbs(img, alpha=alpha, beta=beta)
 
@@ -30,8 +30,8 @@ def frame_preprocess(img):
 
     blur = cv2.bilateralFilter(gray_img, 5, 75, 75)
 
-    block_size = int(np.ceil(img.shape[1] / 46) // 2 * 2 + 1)
-    th = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, block_size, 5)
+    block_size = int(np.ceil(img.shape[1] / params["THRESHOLD_BLOCK_SIZE_FACTOR"]) // 2 * 2 + 1)
+    th = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, block_size, params["THRESHOLD_C"])
 
     morph = cv2.morphologyEx(th, cv2.MORPH_CLOSE, np.ones((5, 5)), iterations=3)
 
