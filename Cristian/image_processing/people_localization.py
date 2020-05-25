@@ -88,6 +88,9 @@ def get_room_id(weights, painting_retrievals, voting=False):
 
 def localize_person(person_bb, painting_bbs, retrievals, distance=CENTER_DISTANCE, weighting=SQRT_AREA, voting=True):
     assert len(painting_bbs) == len(retrievals)
+    if len(painting_bbs) == 0:
+        print("Cannot localize person with no painting detected")
+        return None
     distances = person_paintings_distances(person_bb, painting_bbs, metric=distance)
     weights = apply_weights(distances, painting_bbs, mode=weighting)
     room = get_room_id(weights, retrievals, voting=voting)
