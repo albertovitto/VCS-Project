@@ -12,6 +12,12 @@ def get_painting_info_from_csv(painting_id, path='../dataset/data.csv'):
     return row['Title'].values[0], row['Author'].values[0], row['Room'].values[0]
 
 
+def search_paintings_by_room(room, path='../dataset/data.csv'):
+    df = read_csv(path)
+    paintings = df.loc[df['Room'] == room]
+    return paintings['Image'].values
+
+
 def sift_feature_matching_and_homography(roi, img, include_steps=False):
     # https://docs.opencv.org/master/d1/de0/tutorial_py_feature_homography.html
     sift_roi = cv2.xfeatures2d_SIFT.create()
@@ -29,7 +35,7 @@ def sift_feature_matching_and_homography(roi, img, include_steps=False):
     #     cv2.imshow('IMG + SIFT', out_img)
     #     cv2.waitKey(-1)
 
-    MIN_MATCH_COUNT = 10
+    MIN_MATCH_COUNT = 4
     FLANN_INDEX_KDTREE = 1
     index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
     search_params = dict(checks=50)
@@ -62,7 +68,7 @@ def sift_feature_matching_and_homography(roi, img, include_steps=False):
     if matchesMask:
         img_h, img_w, _ = img.shape
         warped = cv2.warpPerspective(src=roi, M=M, dsize=(img_w, img_h))
-        
+
     out = cv2.drawMatches(roi, kp_roi, img, kp_img, good, None, **draw_params)
 
     return warped, out
