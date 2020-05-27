@@ -4,8 +4,6 @@ import copy
 import numpy as np
 import cv2
 
-MAP_IMG_PATH = os.path.join("..", "..", "dataset", "map.png")
-
 
 def get_map_rooms_coords():
     # room_num: (tl_x, tl_y, br_x, br_y)
@@ -38,8 +36,8 @@ def get_map_rooms_coords():
     return d
 
 
-def highlight_map_room(room_number):
-    map_img = cv2.imread(MAP_IMG_PATH)
+def highlight_map_room(room_number, map_path):
+    map_img = cv2.imread(map_path)
     overlay = copy.deepcopy(map_img)
     alpha = 0.5
 

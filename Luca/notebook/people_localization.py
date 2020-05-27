@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import cv2
 
@@ -39,7 +41,7 @@ if __name__ == '__main__':
 
         if ret:
             output = pd.get_bb(frame)
-            map_img = highlight_map_room(np.random.randint(1, 22))
+            map_img = highlight_map_room(np.random.randint(1, 22), map_path=os.path.join("..", "..", "dataset", "map.png"))
 
             hstack = show_on_row(output, map_img)
             cv2.imshow("Frame", hstack)
