@@ -18,8 +18,8 @@ if __name__ == '__main__':
 
     video_path = '../../dataset/videos/%s' % video_name
 
-    # dict = read_dict_for_test_set()
-    # video_path = dict['010']
+    dict = read_dict_for_test_set()
+    video_path = dict['003']
 
     video = cv2.VideoCapture(video_path)
 

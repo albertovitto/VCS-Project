@@ -4,7 +4,7 @@ import cv2
 from Luca.vcsp.painting_detection.constants import conf
 
 
-def frame_process(img):
+def frame_process(img, params):
     alpha, beta = auto_alpha_beta(img)
     adjusted_img = cv2.convertScaleAbs(img, alpha=alpha, beta=beta)
 
@@ -12,8 +12,8 @@ def frame_process(img):
 
     blur = cv2.GaussianBlur(gray_img, (5, 5), 0)
 
-    w = int(np.ceil(img.shape[1] / 46) // 2 * 2 + 1)
-    th = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, w, 5)
+    w = int(np.ceil(img.shape[1] / params["THRESHOLD_BLOCK_SIZE_FACTOR"]) // 2 * 2 + 1)
+    th = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, w, params["THRESHOLD_C"])
 
     morph = cv2.morphologyEx(th, cv2.MORPH_OPEN, np.ones((3, 3)), iterations=1)
     morph = cv2.morphologyEx(morph, cv2.MORPH_CLOSE, np.ones((5, 5)), iterations=3)

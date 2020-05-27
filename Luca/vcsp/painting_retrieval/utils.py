@@ -206,7 +206,7 @@ def adaptive_mask(img):
 def create_all_features_db(db_dir_path, files_dir_path):
     imgs_path_list = []
     for filename in os.listdir(db_dir_path):
-        imgs_path_list.append(db_dir_path + filename)
+        imgs_path_list.append(os.path.join(db_dir_path, filename))
 
     sift = cv2.xfeatures2d.SIFT_create()
 
@@ -226,11 +226,11 @@ def create_all_features_db(db_dir_path, files_dir_path):
 
     img_features_db = img_features_db.reshape((1, img_features_db.shape[0]))
 
-    np.save(files_dir_path + 'features_db.npy', features_db)
-    np.save(files_dir_path + 'img_features_db.npy', img_features_db)
+    np.save(os.path.join(files_dir_path, 'features_db.npy'), features_db)
+    np.save(os.path.join(files_dir_path, 'img_features_db.npy'), img_features_db)
 
-    features_db = np.load(files_dir_path + 'features_db.npy')
-    img_features_db = np.load(files_dir_path + 'img_features_db.npy')
+    features_db = np.load(os.path.join(files_dir_path, 'features_db.npy'))
+    img_features_db = np.load(os.path.join(files_dir_path, 'img_features_db.npy'))
 
     return features_db, img_features_db
 

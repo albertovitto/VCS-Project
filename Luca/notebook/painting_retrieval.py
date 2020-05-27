@@ -1,3 +1,4 @@
+import os
 import time
 
 import numpy as np
@@ -10,8 +11,8 @@ from Luca.vcsp.utils.multiple_show import show_on_row
 
 if __name__ == '__main__':
 
-    db_dir_path = '../../dataset/paintings_db/'
-    files_dir_path = '../../dataset/'
+    db_dir_path = os.path.join("..", "..", "dataset", "paintings_db")
+    files_dir_path = os.path.join("..", "..", "dataset")
 
     retrieval = PaintingRetrieval(db_dir_path, files_dir_path)
     retrieval.train()
@@ -55,8 +56,11 @@ if __name__ == '__main__':
                     cv2.putText(roi, "{}".format(i), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3,
                                 False)
                     print("Roi {} - rank = {}".format(i, rank))
-                    ground_truth = cv2.imread('../../dataset/paintings_db/' + "{:03d}.png".format(rank[0]))
-                    cv2.imshow("Roi {}".format(i), show_on_row(roi, ground_truth))
+                    if rank[0] != -1:
+                        ground_truth = cv2.imread('../../dataset/paintings_db/' + "{:03d}.png".format(rank[0]))
+                        cv2.imshow("Roi {}".format(i), show_on_row(roi, ground_truth))
+                    else:
+                        cv2.imshow("Roi {}".format(i), roi)
                 cv2.waitKey(-1)
                 for i, roi in enumerate(rois):
                     cv2.destroyWindow("Roi {}".format(i))
