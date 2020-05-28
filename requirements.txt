@@ -7,9 +7,11 @@ cycler==0.10.0
 decorator==4.4.2
 future==0.18.2
 imageio==2.8.0
+imgviz==1.1.0
 joblib==0.14.1
 kiwisolver==1.1.0
 labelImg==1.8.3
+labelme==4.4.0
 lxml==4.5.0
 matplotlib==3.2.1
 networkx==2.4
@@ -25,11 +27,14 @@ PyQt5-sip==12.7.2
 python-dateutil==2.8.1
 pytz==2020.1
 PyWavelets==1.1.1
+PyYAML==5.3.1
+QtPy==1.9.0
 regex==2020.4.4
 scikit-image==0.16.2
 scikit-learn==0.22.2.post1
 scipy==1.4.1
 six==1.14.0
+termcolor==1.1.0
 toml==0.10.0
 torch==1.4.0
 torchvision==0.5.0
