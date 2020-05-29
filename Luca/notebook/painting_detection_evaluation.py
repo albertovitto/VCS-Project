@@ -18,7 +18,7 @@ if __name__ == '__main__':
     # create_test_set(dict)
 
     start_time = time.time()
-    avg_precision, avg_recall = eval_test_set(include_partial_results=False)
+    avg_precision, avg_recall = eval_test_set(verbose=True)
     f1 = f1_score(avg_precision, avg_recall)
     print("f1 = {:.2f}, p = {:.2f}, r = {:.2f}".format(f1, avg_precision, avg_recall))
     print("{} seconds".format(time.time() - start_time))
@@ -39,3 +39,4 @@ if __name__ == '__main__':
     }
 
     # learn_best_detection(param_grid=param_grid)
+

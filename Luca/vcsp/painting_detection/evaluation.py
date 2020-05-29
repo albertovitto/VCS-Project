@@ -2,6 +2,7 @@ import copy
 import os
 import time
 import itertools
+import json
 
 import numpy as np
 import cv2
@@ -13,7 +14,7 @@ from Luca.vcsp.painting_detection.constants import conf
 
 VIDEOS_FOLDER_PATH = os.path.join('..', '..', 'dataset', 'videos')
 TEST_SET_FOLDER_PATH = os.path.join('..', '..', 'dataset', 'painting_detection_test_set')
-GROUND_TRUTH_FOLDER_PATH = os.path.join('..', '..', 'dataset', 'painting_detection_ground_truth')
+GROUND_TRUTH_FOLDER_PATH = os.path.join('..', '..', 'dataset', 'ground_truth')
 
 
 # RUN ONCE
@@ -40,7 +41,6 @@ def read_dict_for_test_set():
          '008': '..\\..\\dataset\\videos\\008\\VIRB0420.MP4',
          '009': '..\\..\\dataset\\videos\\009\\IMG_2659.MOV',
          '010': '..\\..\\dataset\\videos\\010\\VID_20180529_112706.mp4',
-         '011': '..\\..\\dataset\\videos\\011\\3.mp4',
          '012': '..\\..\\dataset\\videos\\012\\IMG_4087.MOV',
          '013': '..\\..\\dataset\\videos\\013\\20180529_112417_ok.mp4',
          '014': '..\\..\\dataset\\videos\\014\\VID_20180529_113001.mp4'
@@ -114,7 +114,7 @@ def bb_iou(box1, box2):
     return iou
 
 
-def get_ground_truth_bbs(video_name, frame_name, test_img_shape):
+def FORMER_get_ground_truth_bbs(video_name, frame_name, test_img_shape):
     # 0 = painting
     # 1 = person
     # 2 = statue
@@ -138,6 +138,85 @@ def get_ground_truth_bbs(video_name, frame_name, test_img_shape):
     return bbs
 
 
+def get_ground_truth_bbs(video_name, frame_name):
+    # [0:94] = painting in db
+    # -1 = painting not identified or not existing
+    # -2 = person
+    # -3 = statue
+    bbs = {"paintings": [], "people": [], "statues": []}
+
+    try:
+        file = open(os.path.join(GROUND_TRUTH_FOLDER_PATH, "{}_{}.json".format(video_name, frame_name)), "r")
+    except FileNotFoundError:
+        # print("Ground truth file not found.")
+        return bbs
+
+    data = json.load(file)
+    img_h = data["imageHeight"]
+    img_w = data["imageWidth"]
+    for s in data["shapes"]:
+        label = int(s["label"])
+        points = fit_coords_inrange(s["points"], img_shape=(img_h, img_w))
+        bb = get_bb_coords(points)
+        if label >= 0 or label == -1:
+            painting = {"bb": bb, "label": label}
+            bbs["paintings"].append(painting)
+        elif label == -2:
+            bbs["people"].append(bb)
+        elif label == -3:
+            bbs["statues"].append(bb)
+        else:
+            continue
+
+    file.close()
+
+    return bbs
+
+
+def get_bb_coords(points):
+    assert len(points) == 2
+
+    p1 = points[0]
+    p2 = points[1]
+
+    tl = 0
+    br = 0
+    if p1[0] < p2[0]:  # p1 is on LEFT, p2 in on RIGHT
+        if p1[1] < p2[1]:  # p1 is TOP-LEFT, p2 is BOTTOM-RIGHT
+            tl = p1
+            br = p2
+        else:  # p1 is BOTTOM-LEFT, p2 is TOP-RIGHT
+            tl = [p1[0], p2[1]]
+            br = [p2[0], p1[1]]
+    else:  # p1 is on RIGHT, p2 is on LEFT
+        if p1[1] < p2[1]:  # p1 is TOP-RIGHT, p2 in BOTTOM-LEFT
+            tl = [p2[0], p1[1]]
+            br = [p1[0], p2[1]]
+        else:  # p1 is BOTTOM-RIGHT, p2 is TOP-LEFT
+            br = p1
+            tl = p2
+
+    w = br[0] - tl[0]
+    h = br[1] - tl[1]
+
+    return tl[0], tl[1], w, h
+
+
+def fit_coords_inrange(points, img_shape):
+    for i in range(len(points)):
+        if points[i][0] < 0:
+            points[i][0] = 0
+        elif points[i][0] > img_shape[1]:
+            points[i][0] = img_shape[1]
+
+        if points[i][1] < 0:
+            points[i][1] = 0
+        elif points[i][1] > img_shape[0]:
+            points[i][1] = img_shape[0]
+
+    return np.array(points).astype(int)
+
+
 def yolo_format_decoder(record, img_shape):
     cls = record[0]
     center_x = record[1]
@@ -156,17 +235,16 @@ def yolo_format_decoder(record, img_shape):
     return cls, x, y, w, h
 
 
-def eval_test_set(iou_threshold=0.5, params=conf, include_partial_results=False):
+def eval_test_set(iou_threshold=0.5, params=conf, verbose=False):
 
     test_set_dict = {}
     for filename in os.listdir(TEST_SET_FOLDER_PATH):
         video_index, frame_index = filename.split("_", 1)
         frame_index, _ = frame_index.split(".", 1)
-        if int(video_index) != 11:  # 011 is a 2K video => computation too slow
-            if video_index in test_set_dict:
-                test_set_dict[video_index].append(frame_index)
-            else:
-                test_set_dict[video_index] = [frame_index]
+        if video_index in test_set_dict:
+            test_set_dict[video_index].append(frame_index)
+        else:
+            test_set_dict[video_index] = [frame_index]
 
     results = {}
     avg_precision = 0
@@ -179,13 +257,13 @@ def eval_test_set(iou_threshold=0.5, params=conf, include_partial_results=False)
             img = cv2.imread(os.path.join(TEST_SET_FOLDER_PATH, "{}_{}.png".format(video, frame)))
             _, _, painting_bbs = get_bb(img, params=params, include_steps=False)
 
-            gt_bbs = get_ground_truth_bbs(video, frame, img.shape)
-            gt_painting_bbs = gt_bbs[0]
+            gt_bbs = get_ground_truth_bbs(video, frame)
+            gt_painting_bbs = gt_bbs["paintings"]
 
             for bb in painting_bbs:
                 iou_scores = []
                 for gt_bb in gt_painting_bbs:
-                    iou = bb_iou(bb, gt_bb)
+                    iou = bb_iou(bb, gt_bb["bb"])
                     iou_scores.append(iou)
 
                 if len(iou_scores) != 0 and np.max(iou_scores) >= iou_threshold:
@@ -209,11 +287,11 @@ def eval_test_set(iou_threshold=0.5, params=conf, include_partial_results=False)
         avg_precision += precision
         avg_recall += recall
 
-        if include_partial_results:
+        if verbose:
             print("--- video {} ---".format(video))
             print("TP FP FN TN")
             print("{} {} {} {}".format(TP, FP, FN, TN))
-            print("p = {}, r = {}".format(precision, recall))
+            print("p = {:.2f}, r = {:.2f}".format(precision, recall))
             print("-----------------")
 
     avg_precision = avg_precision / len(test_set_dict.keys())
