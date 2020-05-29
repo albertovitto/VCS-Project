@@ -4,7 +4,7 @@ import time
 import numpy as np
 import cv2
 
-from Luca.vcsp.painting_retrieval.retrieval import PaintingRetrieval
+from Luca.vcsp.painting_retrieval.retrieval import PaintingRetrieval, PaintingRet
 from Luca.vcsp.painting_detection.detection import get_bb
 from Luca.vcsp.utils.multiple_show import show_on_row
 from Luca.vcsp.painting_detection.evaluation import read_dict_for_test_set
@@ -17,6 +17,10 @@ if __name__ == '__main__':
 
     retrieval = PaintingRetrieval(db_dir_path, files_dir_path)
     retrieval.train()
+
+    """db_path = os.path.join("..", "..", "dataset", "paintings_db")
+    features_db_path = os.path.join("..", "..", "dataset", "features_db")
+    retrieval = PaintingRet(db_dir_path, features_db_path)"""
 
     # video_name = '000/VIRB0393.MP4'
     video_name = '001/GOPR5826.MP4'
@@ -31,8 +35,8 @@ if __name__ == '__main__':
 
     video_path = '../../dataset/videos/%s' % video_name
 
-    dict = read_dict_for_test_set()
-    video_path = dict['014']
+    """dict = read_dict_for_test_set()
+    video_path = dict['014']"""
 
     video = cv2.VideoCapture(video_path)
 
@@ -56,7 +60,7 @@ if __name__ == '__main__':
                 cv2.waitKey(-1)
             if key == ord('r'):  # show rois with image retrieval
                 for i, roi in enumerate(rois):
-                    rank, _ = retrieval.predict(roi)
+                    rank, _ = retrieval.predict(roi, use_extra_check=True)
                     cv2.putText(roi, "{}".format(i), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3,
                                 False)
                     print("Roi {} - rank = {}".format(i, rank))

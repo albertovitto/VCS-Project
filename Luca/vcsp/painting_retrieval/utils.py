@@ -235,6 +235,40 @@ def create_all_features_db(db_dir_path, files_dir_path):
     return features_db, img_features_db
 
 
+def create_features_db(db_path, output_path):
+    if not os.path.isdir(output_path):
+        os.mkdir(output_path)
+
+    if len(os.listdir(output_path)) != 0:
+        print("Features already created.")
+        return
+
+    sift = cv2.xfeatures2d.SIFT_create()
+
+    features_db = {}
+    for i, filename in enumerate(os.listdir(db_path)):
+        img = cv2.imread(os.path.join(db_path, filename))
+        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        kp, dsc = sift.detectAndCompute(gray_img, None)
+
+        features_db[i] = dsc
+        np.save(os.path.join(output_path, 'features_{}.npy'.format(i)), dsc)
+
+    return features_db
+
+
+def get_features_db(features_db_path):
+
+    features_db = {}
+    if os.path.isdir(features_db_path):
+        for i, filename in enumerate(os.listdir(features_db_path)):
+            dsc = np.load(os.path.join(features_db_path, filename))
+            features_db[i] = dsc
+
+    return features_db
+
+
 # UNUSED
 def retrieve(test_img_path):
     sift = cv2.xfeatures2d.SIFT_create()

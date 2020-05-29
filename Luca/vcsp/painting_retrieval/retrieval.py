@@ -2,7 +2,50 @@ import os
 
 import numpy as np
 import cv2
-from Luca.vcsp.painting_retrieval.utils import create_all_features_db, rectangular_mask, elliptical_mask, adaptive_mask
+from Luca.vcsp.painting_retrieval.utils import create_all_features_db, rectangular_mask, elliptical_mask, adaptive_mask,\
+    get_features_db, create_features_db
+
+
+class PaintingRet:
+
+    def __init__(self, db_path, features_db_path):
+        self.db_path = db_path
+        self.features_db_path = features_db_path
+        self.sift = cv2.xfeatures2d.SIFT_create()
+
+        FLANN_INDEX_KDTREE = 1
+        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+        search_params = dict(checks=50)
+        self.flann = cv2.FlannBasedMatcher(index_params, search_params)
+
+        # load files or create if missed
+        self.features_db = get_features_db(features_db_path)
+        if not self.features_db:
+            print("Creating features db ...")
+            self.features_db = create_features_db(db_path, features_db_path)
+            print("Done.")
+
+    def predict(self, test_img):
+        gray_img = cv2.cvtColor(test_img, cv2.COLOR_BGR2GRAY)
+        mask = elliptical_mask(gray_img)
+        masked_data = cv2.bitwise_and(gray_img, gray_img, mask=mask)
+        kp_test, dsc_test = self.sift.detectAndCompute(masked_data, None)
+
+        all_matches = {}
+        for index, dsc in self.features_db.items():
+            matches = self.flann.knnMatch(dsc_test, dsc, k=2)
+            good = []
+            for m, n in matches:
+                if m.distance < 0.7 * n.distance:
+                    good.append(m)
+            all_matches[index] = len(good)
+
+        print(all_matches)
+        rank = {k: v for k, v in sorted(all_matches.items(), key=lambda item: item[1], reverse=True)}
+        rank_keys = list(rank.keys())
+        rank_values = list(rank.values())
+
+        return rank_keys, rank_values
 
 
 class PaintingRetrieval:
@@ -11,6 +54,10 @@ class PaintingRetrieval:
         self.db_dir_path = db_dir_path
         self.sift = cv2.xfeatures2d.SIFT_create()
         self.knn = cv2.ml.KNearest_create()
+        FLANN_INDEX_KDTREE = 1
+        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+        search_params = dict(checks=50)
+        self.flann = cv2.FlannBasedMatcher(index_params, search_params)
 
         # load files or create if missed
         try:
@@ -52,6 +99,7 @@ class PaintingRetrieval:
         rank_keys = list(rank.keys())
         rank_values = list(rank.values())
 
+        """
         if use_extra_check:
             # check on histogram match for rank[0]
             rank0_img = cv2.imread(os.path.join(self.db_dir_path, "{:03d}.png".format(rank_keys[0])))
@@ -67,6 +115,21 @@ class PaintingRetrieval:
             ret = cv2.compareHist(rank0_hist, test_hist, method=cv2.HISTCMP_INTERSECT)
             print(ret)
             if ret < 0.5:  # RGB => 2200, GRAY => 50000, NORM + GRAY => 0.5
+                rank_keys.insert(0, -1)
+                rank_values.insert(0, -1)
+        """
+
+        if use_extra_check:
+            rank0_img = cv2.imread(os.path.join(self.db_dir_path, "{:03d}.png".format(rank_keys[0])))
+            gray_rank0_img = cv2.cvtColor(rank0_img, cv2.COLOR_BGR2GRAY)
+            kp_rank0, dsc_rank0 = self.sift.detectAndCompute(gray_rank0_img, None)
+
+            matches = self.flann.knnMatch(dsc, dsc_rank0, k=2)
+            good = []
+            for m, n in matches:
+                if m.distance < 0.7 * n.distance:
+                    good.append(m)
+            if len(good) < 10:
                 rank_keys.insert(0, -1)
                 rank_values.insert(0, -1)
 
