@@ -65,12 +65,27 @@ def find_room_for_person(people_boxes, painting_boxes, painting_rooms):
     return people_locations
 
 
+# painting sx
+# 369 187 300 500
+# painting cen
+# 739 272 200 400
+# painting dx
+# 1040 360 100 300
+# painting dx
+# 1260 460 150 200
+
+# person sx
+# 1260 474 200 400
+# person dx
+# 1430 530 100 300
+
+
 people_boxes = [[1260, 474, 200, 400], [1430, 530, 100, 300]]
 painting_boxes = [[369, 187, 300, 500], [739, 272, 200, 400],
                   [1040, 360, 100, 300], [1260, 460, 150, 200]]
 # box -> retrival -> painting_id -> room
 painting_rooms = [5, 5, 5, 6]
-# goal: person on the roght should be assigned to room 6
+# goal: person on the right should be assigned to room 6
 person_room = find_room_for_person(
     people_boxes, painting_boxes, painting_rooms)
 if person_room is not None:

@@ -24,8 +24,9 @@ def arg_parse():
 
 
 if __name__ == '__main__':
+    path = './dataset/data.csv'
     args = arg_parse()
-    _, _, room = get_painting_info_from_csv(args.painting, '../dataset/data.csv')
+    _, _, room = get_painting_info_from_csv(args.painting, path)
     prev = room - 1
     next = room + 1
     if prev == 0:
@@ -33,10 +34,10 @@ if __name__ == '__main__':
     if next == 23:
         next = 1
     print('Current room {}:'.format(room))
-    print(search_paintings_by_room(room))
+    print(search_paintings_by_room(room, path))
     print('-----------------------\n\n')
     print('Previous room {}:'.format(prev))
-    print(search_paintings_by_room(prev))
+    print(search_paintings_by_room(prev, path))
     print('-----------------------\n\n')
     print('Next room {}:'.format(next))
-    print(search_paintings_by_room(next))
+    print(search_paintings_by_room(next, path))
