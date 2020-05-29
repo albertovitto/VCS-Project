@@ -7,6 +7,7 @@ import cv2
 from Luca.vcsp.painting_retrieval.retrieval import PaintingRetrieval
 from Luca.vcsp.painting_detection.detection import get_bb
 from Luca.vcsp.utils.multiple_show import show_on_row
+from Luca.vcsp.painting_detection.evaluation import read_dict_for_test_set
 
 
 if __name__ == '__main__':
@@ -30,6 +31,9 @@ if __name__ == '__main__':
 
     video_path = '../../dataset/videos/%s' % video_name
 
+    dict = read_dict_for_test_set()
+    video_path = dict['014']
+
     video = cv2.VideoCapture(video_path)
 
     if not video.isOpened():
@@ -37,7 +41,7 @@ if __name__ == '__main__':
 
     lost_frames = 0
     pos_frames = 0
-    skip_frames = False
+    skip_frames = True
     while video.isOpened():
         ret, frame = video.read()
 
@@ -67,6 +71,8 @@ if __name__ == '__main__':
 
             if skip_frames:
                 pos_frames += video.get(cv2.CAP_PROP_FPS)
+                if pos_frames > video.get(cv2.CAP_PROP_FRAME_COUNT):
+                    break
                 video.set(cv2.CAP_PROP_POS_FRAMES, pos_frames)
         else:
             lost_frames += 1

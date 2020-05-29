@@ -35,12 +35,13 @@ class PaintingRetrieval:
 
         results = []
         # for each descriptor, find the most similar img_db
-        for d in dsc:
-            # ret, _, _, _ = self.knn.findNearest(d.reshape((1, len(d))), 1)
-            # results.append(int(ret))
-            ret, _, _, dist = self.knn.findNearest(d.reshape((1, len(d))), 2)
-            if dist[0, 0] < 0.75 * dist[0, 1]:  # Lowe's ratio test
-                results.append(int(ret))
+        if dsc is not None:
+            for d in dsc:
+                # ret, _, _, _ = self.knn.findNearest(d.reshape((1, len(d))), 1)
+                # results.append(int(ret))
+                ret, _, _, dist = self.knn.findNearest(d.reshape((1, len(d))), 2)
+                if dist[0, 0] < 0.75 * dist[0, 1]:  # Lowe's ratio test
+                    results.append(int(ret))
 
         # create ranked list in descending order of similarity
         rank = {}
