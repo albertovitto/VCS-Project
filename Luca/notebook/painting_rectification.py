@@ -16,15 +16,15 @@ if __name__ == '__main__':
         retrieval.train()
 
     # video_name = '000/VIRB0393.MP4'
-    video_name = '001/GOPR5826.MP4'
+    #video_name = '001/GOPR5826.MP4'
     # video_name = '005/GOPR2045.MP4'
     # video_name = '012/IMG_4086.MOV'
     # video_name = '005/GOPR2051.MP4'
     # video_name = '004/IMG_3803.MOV'
     # video_name = '008/VIRB0419.MP4'
-    # video_name = '008/VIRB0427.MP4'
+    #video_name = '008/VIRB0427.MP4'
     # video_name = '012/IMG_4080.MOV'
-    # video_name = '002/20180206_114720.mp4'
+    video_name = '002/20180206_114720.mp4'
 
     video_path = '../../dataset/videos/%s' % video_name
 
@@ -57,6 +57,9 @@ if __name__ == '__main__':
                         rect_roi, matches = rectify_with_retrieval(roi, ground_truth)
                     else:
                         rect_roi = rectify(roi, include_steps=False)
+
+                    if rect_roi is None:
+                        cv2.imshow("Roi {}".format(i), matches)
 
                     if rect_roi is not None:
                         cv2.imshow("Rectified roi {}".format(i), rect_roi)

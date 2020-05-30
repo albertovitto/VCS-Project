@@ -6,7 +6,7 @@ from scipy.spatial import distance
 
 from Luca.vcsp.painting_rectification.utils import get_four_coordinates
 from Luca.vcsp.utils import multiple_show
-
+from Alberto.could_not_find_matches import could_not_find_matches
 
 def rectify(img, include_steps=False):
 
@@ -102,10 +102,15 @@ def rectify_with_retrieval(img, ground_truth):
         matches_mask = None
 
     rectified = None
+
     if matches_mask:
         ground_truth_h, ground_truth_w, _ = ground_truth.shape
         rectified = cv2.warpPerspective(src=img, M=M, dsize=(ground_truth_w, ground_truth_h))
 
     output = cv2.drawMatches(img, kp_img, ground_truth, kp_ground_truth, good, None,
                           matchColor=(0, 255, 0), singlePointColor=None, matchesMask=matches_mask, flags=2)
+
+    if matches_mask is None:
+        h, w, c = img.shape
+        output = np.hstack((img,could_not_find_matches(h,w,c)))
     return rectified, output
