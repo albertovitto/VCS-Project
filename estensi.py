@@ -14,6 +14,7 @@ import cv2
 import numpy as np
 from Cristian.YOLOv3.test_yolo import Yolo
 import Cristian.image_processing.people_localization as pl
+from Cristian.image_processing.people_localization import PeopleLocator
 from Cristian.image_processing.retrieval_utils import sift_feature_matching_and_homography
 from Luca.vcsp.painting_detection.detection import get_bb
 from Luca.vcsp.painting_retrieval.retrieval import PaintingRetrieval
@@ -37,20 +38,14 @@ def main():
     path = os.path.abspath(os.path.dirname(__file__))
     db_dir_path = os.path.join(path, "dataset", "paintings_db")
     files_dir_path = os.path.join(path, "dataset")
-
-    # FIXME: cannot read features_db because of path
-    #
-    # WORKING FIX:
-    ### Luca/vcsp/painting_retrieval/utils.py, line 209
-    # imgs_path_list.append(os.path.join(db_dir_path, filename))
-    #
-    ### Luca/vcsp/painting_retrieval/retrieval.py, lines 15-16
-    # self.features_db = np.load(os.path.join(files_dir_path, 'features_db.npy'))
-    # self.img_features_db = np.load(os.path.join(files_dir_path, 'img_features_db.npy'))
+    
     retrieval = PaintingRetrieval(db_dir_path, files_dir_path)
     retrieval.train()
 
     yolo = Yolo(yolo_path=os.path.join(path, "Cristian", "YOLOv3"))
+
+    people_locator = PeopleLocator(distance=pl.CENTER_DISTANCE, weighting=pl.SQRT_AREA, voting=True,
+                                   verbose=args.include_steps, data_path=files_dir_path)
 
     video_path = args.video
     video = cv2.VideoCapture(video_path)
@@ -105,20 +100,8 @@ def main():
                     cv2.imshow("Roi {}".format(i), out)
                     retrievals.append(rank[0])
                 for person_bb in people_bbs:
-                    room = pl.localize_person(person_bb, painting_bbs, retrievals,
-                                              distance=pl.CENTER_DISTANCE,
-                                              weighting=pl.AREA,
-                                              voting=True,
-                                              verbose=args.include_steps,
-                                              data_path=files_dir_path)
-
-                    # FIXME: cannot read map because of path
-                    # Possible fix:
-                    # def highlight_map_room(room_number, map_path="../../dataset/"):
-                    #     path = os.path.join(map_path, "map.png")
-                    #     map_img = cv2.imread(path)
-                    # [...]
-                    map_img = highlight_map_room(room, map_path=files_dir_path)
+                    room = people_locator.localize_person(person_bb, painting_bbs, retrievals)
+                    map_img = highlight_map_room(room, map_path=os.path.join(files_dir_path, "map.png"))
                     cv2.imshow("People localization", map_img)
 
                 cv2.waitKey(-1)
