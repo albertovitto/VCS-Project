@@ -6,13 +6,14 @@ from Luca.vcsp.painting_detection.detection import get_bb
 from Luca.vcsp.painting_detection.evaluation import bb_iou, get_ground_truth_bbs
 
 from Luca.vcsp.painting_detection.constants import conf
-from Luca.vcsp.painting_retrieval.retrieval import PaintingRetrieval
+from Luca.vcsp.painting_retrieval.retrieval import PaintingRetrieval, PaintingRet
 
 VIDEOS_FOLDER_PATH = os.path.join('..', '..', 'dataset', 'videos')
 TEST_SET_FOLDER_PATH = os.path.join('..', '..', 'dataset', 'painting_detection_test_set')
 GROUND_TRUTH_FOLDER_PATH = os.path.join('..', '..', 'dataset', 'ground_truth')
 DATASET_FOLDER_PATH = os.path.join("..", "..", "dataset")
 DB_FOLDER_PATH = os.path.join("..", "..", "dataset", "paintings_db")
+FEATURES_FOLDER_PATH = os.path.join("..", "..", "dataset", "features_db")
 
 
 def eval_test_set(iou_threshold=0.5, rank_scope=5, params=conf, verbose=False):
@@ -25,8 +26,9 @@ def eval_test_set(iou_threshold=0.5, rank_scope=5, params=conf, verbose=False):
         else:
             test_set_dict[video_index] = [frame_index]
 
-    retrieval = PaintingRetrieval(db_dir_path=DB_FOLDER_PATH, files_dir_path=DATASET_FOLDER_PATH)
-    retrieval.train()
+    # retrieval = PaintingRetrieval(db_dir_path=DB_FOLDER_PATH, files_dir_path=DATASET_FOLDER_PATH)
+    # retrieval.train()
+    retrieval = PaintingRet(db_path=DB_FOLDER_PATH, features_db_path=FEATURES_FOLDER_PATH)
 
     results = {}
     for video in test_set_dict.keys():

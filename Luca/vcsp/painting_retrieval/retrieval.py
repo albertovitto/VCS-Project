@@ -27,7 +27,7 @@ class PaintingRet:
 
     def predict(self, test_img):
         gray_img = cv2.cvtColor(test_img, cv2.COLOR_BGR2GRAY)
-        mask = elliptical_mask(gray_img)
+        mask = adaptive_mask(gray_img)
         masked_data = cv2.bitwise_and(gray_img, gray_img, mask=mask)
         kp_test, dsc_test = self.sift.detectAndCompute(masked_data, None)
 
@@ -40,7 +40,6 @@ class PaintingRet:
                     good.append(m)
             all_matches[index] = len(good)
 
-        print(all_matches)
         rank = {k: v for k, v in sorted(all_matches.items(), key=lambda item: item[1], reverse=True)}
         rank_keys = list(rank.keys())
         rank_values = list(rank.values())
@@ -122,7 +121,8 @@ class PaintingRetrieval:
         if use_extra_check:
             rank0_img = cv2.imread(os.path.join(self.db_dir_path, "{:03d}.png".format(rank_keys[0])))
             gray_rank0_img = cv2.cvtColor(rank0_img, cv2.COLOR_BGR2GRAY)
-            kp_rank0, dsc_rank0 = self.sift.detectAndCompute(gray_rank0_img, None)
+            # kp_rank0, dsc_rank0 = self.sift.detectAndCompute(gray_rank0_img, None)
+            dsc_rank0 = np.load(os.path.join("..", "..", "dataset", "features_db", "features_{}.npy".format(rank_keys[0])))
 
             matches = self.flann.knnMatch(dsc, dsc_rank0, k=2)
             good = []

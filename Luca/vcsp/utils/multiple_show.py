@@ -39,6 +39,11 @@ def vertical_stack(img1, img2):
 
 
 def show_on_row(img1, img2):
+    if len(img1.shape) == 2:
+        img1 = cv2.cvtColor(img1, cv2.COLOR_GRAY2BGR)
+    if len(img2.shape) == 2:
+        img2 = cv2.cvtColor(img2, cv2.COLOR_GRAY2BGR)
+
     height = max([img1.shape[0], img2.shape[0]])
     width = img1.shape[1] + img2.shape[1]
 
@@ -53,6 +58,11 @@ def show_on_row(img1, img2):
 
 
 def show_on_col(img1, img2):
+    if len(img1.shape) == 2:
+        img1 = cv2.cvtColor(img1, cv2.COLOR_GRAY2BGR)
+    if len(img2.shape) == 2:
+        img2 = cv2.cvtColor(img2, cv2.COLOR_GRAY2BGR)
+
     height = img1.shape[0] + img2.shape[0]
     width = max([img1.shape[1], img2.shape[1]])
 

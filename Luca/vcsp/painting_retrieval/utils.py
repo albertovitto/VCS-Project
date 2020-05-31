@@ -262,9 +262,12 @@ def get_features_db(features_db_path):
 
     features_db = {}
     if os.path.isdir(features_db_path):
-        for i, filename in enumerate(os.listdir(features_db_path)):
+        for filename in os.listdir(features_db_path):
+            _, img_index = filename.split('_', 1)
+            img_index, _ = img_index.split('.', 1)
+            img_index = int(img_index)
             dsc = np.load(os.path.join(features_db_path, filename))
-            features_db[i] = dsc
+            features_db[img_index] = dsc
 
     return features_db
 
