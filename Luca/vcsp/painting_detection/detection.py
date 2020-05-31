@@ -95,8 +95,8 @@ def get_bb(img, params=conf, include_steps=False):
                 bbs.append(list(candidate_bounding_boxes[index]))  # tuple non è modificabile => list
 
     if include_steps:
-        hstack1 = multiple_show.horizontal_stack(blur, th)
-        hstack2 = multiple_show.horizontal_stack(morph, output)
-        output = multiple_show.vertical_stack(hstack1, hstack2)
+        hstack1 = multiple_show.show_on_row(blur, th)
+        hstack2 = multiple_show.show_on_row(morph, output)
+        output = multiple_show.show_on_col(hstack1, hstack2)
 
     return output, rois, bbs
