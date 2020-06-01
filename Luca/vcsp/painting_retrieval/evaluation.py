@@ -26,9 +26,9 @@ def eval_test_set(iou_threshold=0.5, rank_scope=5, params=conf, verbose=False):
         else:
             test_set_dict[video_index] = [frame_index]
 
-    # retrieval = PaintingRetrieval(db_dir_path=DB_FOLDER_PATH, files_dir_path=DATASET_FOLDER_PATH)
-    # retrieval.train()
-    retrieval = PaintingRet(db_path=DB_FOLDER_PATH, features_db_path=FEATURES_FOLDER_PATH)
+    retrieval = PaintingRetrieval(db_dir_path=DB_FOLDER_PATH, files_dir_path=DATASET_FOLDER_PATH)
+    retrieval.train()
+    #retrieval = PaintingRet(db_path=DB_FOLDER_PATH, features_db_path=FEATURES_FOLDER_PATH)
 
     results = {}
     for video in test_set_dict.keys():
@@ -42,24 +42,30 @@ def eval_test_set(iou_threshold=0.5, rank_scope=5, params=conf, verbose=False):
             gt_bbs = get_ground_truth_bbs(video, frame)
             gt_painting_bbs = gt_bbs["paintings"]
 
-            for i, bb in enumerate(painting_bbs):
-                iou_scores = []
-                for gt_bb in gt_painting_bbs:
-                    iou = bb_iou(bb, gt_bb["bb"])
-                    iou_scores.append(iou)
+            should_continue = False
+            for painting in gt_painting_bbs:
+                if painting["label"] != -1:
+                    should_continue = True
 
-                if len(iou_scores) != 0 and np.max(iou_scores) >= iou_threshold:
-                    rank, _ = retrieval.predict(rois[i])
-                    gt_label = gt_painting_bbs[np.argmax(iou_scores)]["label"]
-                    if gt_label == -1:
-                        pass
-                    elif gt_label in rank[:rank_scope]:
-                        position = rank[:rank_scope].index(gt_label) + 1
-                        results[video]["precision"] += 1 / position
-                        results[video]["count"] += 1
-                    else:
-                        results[video]["precision"] += 0
-                        results[video]["count"] += 1
+            if should_continue:
+                for i, bb in enumerate(painting_bbs):
+                    iou_scores = []
+                    for gt_bb in gt_painting_bbs:
+                        iou = bb_iou(bb, gt_bb["bb"])
+                        iou_scores.append(iou)
+
+                    if len(iou_scores) != 0 and np.max(iou_scores) >= iou_threshold:
+                        rank, _ = retrieval.predict(rois[i])
+                        gt_label = gt_painting_bbs[np.argmax(iou_scores)]["label"]
+                        if gt_label == -1:
+                            pass
+                        elif gt_label in rank[:rank_scope]:
+                            position = rank[:rank_scope].index(gt_label) + 1
+                            results[video]["precision"] += 1 / position
+                            results[video]["count"] += 1
+                        else:
+                            results[video]["precision"] += 0
+                            results[video]["count"] += 1
 
         if results[video]["count"] != 0:
             video_avg_precision = results[video]["precision"] / results[video]["count"]

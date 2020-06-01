@@ -97,6 +97,7 @@ def is_painting(hull, poly, bounding_box, rotated_box, ellipse, img, params):
 
 
 def auto_alpha_beta(img):
+    # 1 method
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     hsv_planes = cv2.split(hsv)
     brightness = hsv_planes[2]
@@ -107,6 +108,12 @@ def auto_alpha_beta(img):
         beta = 0
 
     alpha = 1.2
+
+    # 2 method
+    """gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    percent = np.percentile(gray_img, 90)
+    alpha = (255 / percent)
+    beta = 0"""
 
     return alpha, beta
 

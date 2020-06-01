@@ -36,8 +36,8 @@ if __name__ == '__main__':
 
     video_path = '../../dataset/videos/%s' % video_name
 
-    #dict = read_dict_for_test_set()
-    #video_path = dict['001']
+    dict = read_dict_for_test_set()
+    video_path = dict['009']
 
     video = cv2.VideoCapture(video_path)
 
@@ -68,7 +68,7 @@ if __name__ == '__main__':
                     if rank[0] != -1:
                         ground_truth = cv2.imread('../../dataset/paintings_db/' + "{:03d}.png".format(rank[0]))
                         gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-                        mask = adaptive_mask(gray_roi)
+                        mask = elliptical_mask(gray_roi)
                         masked_data = cv2.bitwise_and(gray_roi, gray_roi, mask=mask)
                         masked_data = cv2.cvtColor(masked_data, cv2.COLOR_GRAY2BGR)
                         cv2.imshow("Roi {}".format(i), show_on_row(show_on_row(roi, masked_data), ground_truth))
