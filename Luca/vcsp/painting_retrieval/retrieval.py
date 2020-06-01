@@ -27,7 +27,7 @@ class PaintingRet:
 
     def predict(self, test_img):
         gray_img = cv2.cvtColor(test_img, cv2.COLOR_BGR2GRAY)
-        mask = adaptive_mask(gray_img)
+        mask = elliptical_mask(gray_img)
         masked_data = cv2.bitwise_and(gray_img, gray_img, mask=mask)
         kp_test, dsc_test = self.sift.detectAndCompute(masked_data, None)
 
@@ -83,11 +83,11 @@ class PaintingRetrieval:
         # for each descriptor, find the most similar img_db
         if dsc is not None:
             for d in dsc:
-                # ret, _, _, _ = self.knn.findNearest(d.reshape((1, len(d))), 1)
-                # results.append(int(ret))
-                ret, _, _, dist = self.knn.findNearest(d.reshape((1, len(d))), 2)
-                if dist[0, 0] < 0.75 * dist[0, 1]:  # Lowe's ratio test
-                    results.append(int(ret))
+                ret, _, _, _ = self.knn.findNearest(d.reshape((1, len(d))), 1)
+                results.append(int(ret))
+                #ret, _, _, dist = self.knn.findNearest(d.reshape((1, len(d))), 2)
+                #if dist[0, 0] < 0.75 * dist[0, 1]:  # Lowe's ratio test
+                #    results.append(int(ret))
 
         # create ranked list in descending order of similarity
         rank = {}
@@ -121,8 +121,8 @@ class PaintingRetrieval:
         if use_extra_check:
             rank0_img = cv2.imread(os.path.join(self.db_dir_path, "{:03d}.png".format(rank_keys[0])))
             gray_rank0_img = cv2.cvtColor(rank0_img, cv2.COLOR_BGR2GRAY)
-            # kp_rank0, dsc_rank0 = self.sift.detectAndCompute(gray_rank0_img, None)
-            dsc_rank0 = np.load(os.path.join("..", "..", "dataset", "features_db", "features_{}.npy".format(rank_keys[0])))
+            kp_rank0, dsc_rank0 = self.sift.detectAndCompute(gray_rank0_img, None)
+            # dsc_rank0 = np.load(os.path.join("..", "..", "dataset", "features_db", "features_{}.npy".format(rank_keys[0])))
 
             matches = self.flann.knnMatch(dsc, dsc_rank0, k=2)
             good = []
