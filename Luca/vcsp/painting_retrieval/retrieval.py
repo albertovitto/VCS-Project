@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import cv2
-from Luca.vcsp.painting_retrieval.utils import create_all_features_db, rectangular_mask, elliptical_mask, adaptive_mask,\
+from Luca.vcsp.painting_retrieval.utils import create_all_features_db, rectangular_mask, elliptical_mask, adaptive_mask, \
     get_features_db, create_features_db
 
 

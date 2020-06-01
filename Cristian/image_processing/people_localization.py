@@ -1,8 +1,11 @@
 import os
+import cv2
 import numpy as np
 from Cristian.image_processing.retrieval_utils import get_painting_info_from_csv
 
 # distance
+from Luca.vcsp.people_localization.utils import highlight_map_room
+
 CENTER_DISTANCE = 0
 
 # weighting
@@ -74,6 +77,7 @@ class PeopleLocator():
 
     def get_room_id(self, weights, painting_retrievals):
         assert len(weights) == len(painting_retrievals)
+
         path = os.path.join(self.data_path, 'data.csv')
         if not self.voting:
             # FROM NUMPY DOCS:
@@ -86,25 +90,33 @@ class PeopleLocator():
         else:
             votes = np.zeros(shape=(22))
             for i, pr in enumerate(painting_retrievals):
+                # if retrieval failed, skip
+                if pr is None:
+                    continue
                 _, _, room = get_painting_info_from_csv(pr, path=path)
                 votes[room - 1] += weights[i]
 
             if self.verbose:
-                print("Votes:\n")
+                print("Votes:")
                 for i, v in enumerate(votes):
                     print("Room #{} = {}".format(i + 1, v))
 
             room = np.argmax(votes) + 1
             return room
 
-    def localize_person(self, person_bb, painting_bbs, retrievals):
+    def localize_person(self, person_bb, painting_bbs, retrievals, id=None, show_map=False):
         assert len(painting_bbs) == len(retrievals)
-        if len(painting_bbs) == 0:
-            print("Cannot localize person with no painting detected")
+        if len(painting_bbs) == 0 or not np.any(retrievals):
+            print("Cannot localize person_{} with no painting detected or retrieved".format(id))
             return None
+        if id is not None:
+            print("\nperson_{}:".format(id))
         distances = self.person_paintings_distances(person_bb, painting_bbs)
         weights = self.apply_weights(distances, painting_bbs)
         room = self.get_room_id(weights, retrievals)
+        if room is not None and show_map is True:
+            map_img = highlight_map_room(room, map_path=os.path.join(self.data_path, 'map.png'))
+            cv2.imshow("People localization: person_{}".format(id), map_img)
         return room
 
 
@@ -112,8 +124,9 @@ def main():
     # person = (270, 100, 250, 300)
     person = (1200, 100, 100, 100)
     paintings = [(600, 100, 100, 200), (1000, 50, 50, 100), (10, 700, 1000, 10)]
-    retrievals = [0, 1, 2]  # rooms 19 21 20
-    pl = PeopleLocator(distance=CENTER_DISTANCE, weighting=NONE, voting=False, verbose=True)
+    # retrievals = [0, 1, 2]  # rooms 19 21 20
+    retrievals = [None, 1, 2]
+    pl = PeopleLocator(distance=CENTER_DISTANCE, weighting=SQRT_AREA, voting=True, verbose=True)
     room = pl.localize_person(person, paintings, retrievals)
     print("Room: {}".format(room))
 

@@ -53,9 +53,13 @@ def sift_feature_matching_and_homography(roi, img, include_steps=False):
         matchesMask = mask.ravel().tolist()
         h, w, d = roi.shape
         pts = np.float32([[0, 0], [0, h - 1], [w - 1, h - 1], [w - 1, 0]]).reshape(-1, 1, 2)
-        dst = cv2.perspectiveTransform(pts, M)
-        if include_steps:
-            img = cv2.polylines(img, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)
+        if M is not None:
+            dst = cv2.perspectiveTransform(pts, M)
+            if include_steps:
+                img = cv2.polylines(img, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)
+        else:
+            print("Could not find homography")
+            matchesMask = None
     else:
         print("Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT))
         matchesMask = None
