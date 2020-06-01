@@ -17,6 +17,7 @@ import Cristian.image_processing.people_localization as pl
 from Cristian.image_processing.people_localization import PeopleLocator
 from Cristian.image_processing.retrieval_utils import sift_feature_matching_and_homography
 from Luca.vcsp.painting_detection.detection import get_bb
+from Luca.vcsp.painting_rectification.rectification import rectify
 from Luca.vcsp.painting_retrieval.retrieval import PaintingRetrieval
 from Luca.vcsp.utils.drawing import draw_bb
 from Luca.vcsp.utils.multiple_show import show_on_row
@@ -85,17 +86,23 @@ def main():
                 # retrieve paintings
                 retrievals = []
                 for i, roi in enumerate(rois):
-                    rank, _ = retrieval.predict(roi)
+                    rank, _ = retrieval.predict(roi, use_extra_check=True)
                     cv2.putText(roi, "{}".format(i), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3, False)
                     print("Roi {} - rank = {}".format(i, rank))
+
+                    # if retrieval fails
+                    if rank[0] == -1:
+                        print("Cannot retrieve painting for Roi {}".format(i))
+                        retrievals.append(None)
+                        out = show_on_row(roi, rectify(roi))
+                        cv2.imshow("Roi {}".format(i), out)
+                        continue
+
+                    retrievals.append(rank[0])
+
                     ground_truth = cv2.imread(os.path.join(db_dir_path, "{:03d}.png".format(rank[0])))
                     warped, matches = sift_feature_matching_and_homography(roi, ground_truth,
                                                                            include_steps=args.include_steps)
-                    # if enough matrches found, then the retrieval is OK
-                    if warped is not None:
-                        retrievals.append(rank[0])
-                    else:
-                        retrievals.append(None)
 
                     # show output
                     if args.include_steps and warped is not None:

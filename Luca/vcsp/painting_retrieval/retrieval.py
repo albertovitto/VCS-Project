@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import cv2
-from Luca.vcsp.painting_retrieval.utils import create_all_features_db, rectangular_mask, elliptical_mask, adaptive_mask,\
+from Luca.vcsp.painting_retrieval.utils import create_all_features_db, rectangular_mask, elliptical_mask, adaptive_mask, \
     get_features_db, create_features_db
 
 
@@ -121,8 +121,8 @@ class PaintingRetrieval:
         if use_extra_check:
             rank0_img = cv2.imread(os.path.join(self.db_dir_path, "{:03d}.png".format(rank_keys[0])))
             gray_rank0_img = cv2.cvtColor(rank0_img, cv2.COLOR_BGR2GRAY)
-            # kp_rank0, dsc_rank0 = self.sift.detectAndCompute(gray_rank0_img, None)
-            dsc_rank0 = np.load(os.path.join("..", "..", "dataset", "features_db", "features_{}.npy".format(rank_keys[0])))
+            kp_rank0, dsc_rank0 = self.sift.detectAndCompute(gray_rank0_img, None)
+            # dsc_rank0 = np.load(os.path.join("..", "..", "dataset", "features_db", "features_{}.npy".format(rank_keys[0])))
 
             matches = self.flann.knnMatch(dsc, dsc_rank0, k=2)
             good = []
