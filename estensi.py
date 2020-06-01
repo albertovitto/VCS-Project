@@ -18,7 +18,6 @@ from Cristian.image_processing.people_localization import PeopleLocator
 from Cristian.image_processing.retrieval_utils import sift_feature_matching_and_homography
 from Luca.vcsp.painting_detection.detection import get_bb
 from Luca.vcsp.painting_retrieval.retrieval import PaintingRetrieval
-from Luca.vcsp.people_localization.utils import highlight_map_room
 from Luca.vcsp.utils.drawing import draw_bb
 from Luca.vcsp.utils.multiple_show import show_on_row
 
@@ -38,7 +37,7 @@ def main():
     path = os.path.abspath(os.path.dirname(__file__))
     db_dir_path = os.path.join(path, "dataset", "paintings_db")
     files_dir_path = os.path.join(path, "dataset")
-    
+
     retrieval = PaintingRetrieval(db_dir_path, files_dir_path)
     retrieval.train()
 
@@ -64,7 +63,7 @@ def main():
             people_bbs = yolo.get_people_bb(frame, painting_bbs)
 
             # TODO: Cristian should refactor this into a function
-            for person_bb in people_bbs:
+            for id, person_bb in enumerate(people_bbs):
                 x, y, w, h = person_bb
                 if args.include_steps:
                     fy, fx, _ = frame.shape
@@ -73,16 +72,17 @@ def main():
                     w //= 2
                     h //= 2
                 if np.any(person_bb):
-                    draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(0, 0, 255), label="person")
+                    draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(0, 0, 255), label="person_{}".format(id))
 
-            cv2.imshow("Painting detection", output)
+            cv2.imshow("Painting and people detection", output)
 
             key = cv2.waitKey(1)
             if key == ord('q'):  # quit
                 break
             if key == ord('p'):  # pause
                 cv2.waitKey(-1)
-            if key == ord('r'):  # show rois with image retrieval
+            if key == ord('r'):
+                # retrieve paintings
                 retrievals = []
                 for i, roi in enumerate(rois):
                     rank, _ = retrieval.predict(roi)
@@ -91,6 +91,13 @@ def main():
                     ground_truth = cv2.imread(os.path.join(db_dir_path, "{:03d}.png".format(rank[0])))
                     warped, matches = sift_feature_matching_and_homography(roi, ground_truth,
                                                                            include_steps=args.include_steps)
+                    # if enough matrches found, then the retrieval is OK
+                    if warped is not None:
+                        retrievals.append(rank[0])
+                    else:
+                        retrievals.append(None)
+
+                    # show output
                     if args.include_steps and warped is not None:
                         out = show_on_row(matches, warped)
                     elif warped is not None:
@@ -98,11 +105,10 @@ def main():
                     else:
                         out = show_on_row(roi, ground_truth)
                     cv2.imshow("Roi {}".format(i), out)
-                    retrievals.append(rank[0])
-                for person_bb in people_bbs:
-                    room = people_locator.localize_person(person_bb, painting_bbs, retrievals)
-                    map_img = highlight_map_room(room, map_path=os.path.join(files_dir_path, "map.png"))
-                    cv2.imshow("People localization", map_img)
+
+                # localization
+                for id, person_bb in enumerate(people_bbs):
+                    room = people_locator.localize_person(person_bb, painting_bbs, retrievals, id=id, show_map=True)
 
                 cv2.waitKey(-1)
                 for i, roi in enumerate(rois):
