@@ -72,8 +72,8 @@ def main():
                     y = y // 2 + fy // 2
                     w //= 2
                     h //= 2
-                if np.any(person_bb):
-                    draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(0, 0, 255), label="person_{}".format(id))
+
+                draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(0, 0, 255), label="person_{}".format(id))
 
             cv2.imshow("Painting and people detection", output)
 

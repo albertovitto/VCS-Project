@@ -99,6 +99,16 @@ class Yolo():
                     break
         return selected_people
 
+    @staticmethod
+    def remove_useless_detections(people_bbs):
+        ## removes (0,0,0,0) detections
+        # bbs = []
+        # for bb in people_bbs:
+        #     if np.any(bb):
+        #         bbs.append(bb)
+        # return bbs
+        return list(filter(lambda bb: bb != (0, 0, 0, 0), people_bbs))
+
     def get_people_bb(self, frame, painting_bbs=None):
         img, orig_im, dim = self.prep_image(frame, self.inp_dim)
 
@@ -142,6 +152,7 @@ class Yolo():
 
         if painting_bbs is not None:
             bbs = self.check_bbs_iop(paintings=painting_bbs, people=bbs)
+            bbs = self.remove_useless_detections(bbs)
 
         return bbs
 
