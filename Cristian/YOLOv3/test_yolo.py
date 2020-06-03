@@ -33,7 +33,7 @@ class Yolo():
 
         # people detection correction
         self.prev_ok_bbs = []
-        self.prev_ko_bbs = []
+        self.prev_ko_bbs_buffer = []
 
     @staticmethod
     def get_test_input(input_dim, CUDA, path):
@@ -106,12 +106,6 @@ class Yolo():
 
     @staticmethod
     def remove_useless_detections(people_bbs):
-        ## removes (0,0,0,0) detections
-        # bbs = []
-        # for bb in people_bbs:
-        #     if np.any(bb):
-        #         bbs.append(bb)
-        # return bbs
         return list(filter(lambda bb: bb != (0, 0, 0, 0), people_bbs))
 
     def discard_bbs(self, ok_bbs, ko_bbs, threshold=100):
@@ -122,18 +116,18 @@ class Yolo():
         # - fare l'opposto, ovvero considerare le painting detection del/dei frame precedenti e scartare le people detection
         #   del frame corrente se si overlappano non solo col frame corrente, ma anche con/coi precedenti.
         #   Però abbiamo gli stessi problemi di prima.
-
         def center(bb):
             x, y, w, h = bb
             return np.asarray((x + w // 2, y + h // 2))
 
         okok_bbs = []
         for ok in ok_bbs:
-            distances = np.asarray([np.linalg.norm(center(ok) - center(ko)) for ko in self.prev_ko_bbs])
-            if np.any(distances <= threshold):
-                ko_bbs.append(ok)
-            else:
-                okok_bbs.append(ok)
+            for ko_list in self.prev_ko_bbs_buffer:
+                distances = np.asarray([np.linalg.norm(center(ok) - center(ko)) for ko in ko_list])
+                if np.any(distances <= threshold):
+                    ko_bbs.append(ok)
+                else:
+                    okok_bbs.append(ok)
 
         return okok_bbs, ko_bbs
 
@@ -181,9 +175,12 @@ class Yolo():
         if painting_bbs is not None:
             ok_bbs, ko_bbs = self.check_bbs_iop(paintings=painting_bbs, people=bbs)
             ok_bbs = self.remove_useless_detections(ok_bbs)
-            ok_bbs, ko_bbs = self.discard_bbs(ok_bbs, ko_bbs, threshold=300)
+            ok_bbs, ko_bbs = self.discard_bbs(ok_bbs, ko_bbs, threshold=400)
             self.prev_ok_bbs = ok_bbs
-            self.prev_ko_bbs = ko_bbs
+            self.prev_ko_bbs_buffer.append(ko_bbs)
+            windows_size = 2
+            while len(self.prev_ko_bbs_buffer) > windows_size:
+                self.prev_ko_bbs_buffer.pop(0)
             return ok_bbs
         else:
             self.prev_ok_bbs = []
