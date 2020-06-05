@@ -31,6 +31,10 @@ class Yolo():
         self.model(self.get_test_input(self.inp_dim, self.CUDA, yolo_path), self.CUDA)
         self.model.eval()
 
+        # people detection correction
+        self.prev_ok_bbs = []
+        self.prev_ko_bbs_buffer = []
+
     @staticmethod
     def get_test_input(input_dim, CUDA, path):
         img = cv2.imread(os.path.join(path, "dog-cycle-car.png"))
@@ -90,14 +94,42 @@ class Yolo():
 
     def check_bbs_iop(self, paintings, people):
         selected_people = []
+        discarded_people = []
         for person in people:
             selected_people.append(person)
             for painting in paintings:
                 iop = self.intersection_over_person(painting, person)
                 if iop == 1:
-                    selected_people.pop()
+                    discarded_people.append(selected_people.pop())
                     break
-        return selected_people
+        return selected_people, discarded_people
+
+    @staticmethod
+    def remove_useless_detections(people_bbs):
+        return list(filter(lambda bb: bb != (0, 0, 0, 0), people_bbs))
+
+    def discard_bbs(self, ok_bbs, ko_bbs, threshold=100):
+        # - considerare le people detection nel frame precedente e le people detection scartate nel frame precedente,
+        #   per poi eliminare le detection nel frame corrente che sono vicine a quelle che prima abbiamo scartato.
+        #   Questo metodo si basa sull'assunzione che la camera non si muova troppo velocemente da un frame all'altro.
+        #   I problemi sono due: la camera a volte si muove velocemente; non possiamo skippare i frame.
+        # - fare l'opposto, ovvero considerare le painting detection del/dei frame precedenti e scartare le people detection
+        #   del frame corrente se si overlappano non solo col frame corrente, ma anche con/coi precedenti.
+        #   Però abbiamo gli stessi problemi di prima.
+        def center(bb):
+            x, y, w, h = bb
+            return np.asarray((x + w // 2, y + h // 2))
+
+        okok_bbs = []
+        for ok in ok_bbs:
+            for ko_list in self.prev_ko_bbs_buffer:
+                distances = np.asarray([np.linalg.norm(center(ok) - center(ko)) for ko in ko_list])
+                if np.any(distances <= threshold):
+                    ko_bbs.append(ok)
+                else:
+                    okok_bbs.append(ok)
+
+        return okok_bbs, ko_bbs
 
     def get_people_bb(self, frame, painting_bbs=None):
         img, orig_im, dim = self.prep_image(frame, self.inp_dim)
@@ -141,9 +173,18 @@ class Yolo():
             bbs.append((x1, y1, w, h))
 
         if painting_bbs is not None:
-            bbs = self.check_bbs_iop(paintings=painting_bbs, people=bbs)
-
-        return bbs
+            ok_bbs, ko_bbs = self.check_bbs_iop(paintings=painting_bbs, people=bbs)
+            ok_bbs = self.remove_useless_detections(ok_bbs)
+            ok_bbs, ko_bbs = self.discard_bbs(ok_bbs, ko_bbs, threshold=400)
+            self.prev_ok_bbs = ok_bbs
+            self.prev_ko_bbs_buffer.append(ko_bbs)
+            windows_size = 2
+            while len(self.prev_ko_bbs_buffer) > windows_size:
+                self.prev_ko_bbs_buffer.pop(0)
+            return ok_bbs
+        else:
+            self.prev_ok_bbs = []
+            return bbs
 
 
 if __name__ == '__main__':
