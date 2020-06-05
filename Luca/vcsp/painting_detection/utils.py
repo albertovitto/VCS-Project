@@ -10,7 +10,9 @@ def frame_process(img, params):
 
     gray_img = cv2.cvtColor(adjusted_img, cv2.COLOR_BGR2GRAY)
 
-    blur = cv2.GaussianBlur(gray_img, (5, 5), 0)
+    blur = cv2.bilateralFilter(gray_img, 5, 75, 75)
+
+    _, otsu_th = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
     w = int(np.ceil(img.shape[1] / params["THRESHOLD_BLOCK_SIZE_FACTOR"]) // 2 * 2 + 1)
     th = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, w, params["THRESHOLD_C"])
@@ -19,7 +21,19 @@ def frame_process(img, params):
     morph = cv2.morphologyEx(morph, cv2.MORPH_CLOSE, np.ones((5, 5)), iterations=3)
     morph = cv2.morphologyEx(morph, cv2.MORPH_OPEN, np.ones((5, 5)), iterations=1)
 
-    return blur, th, morph
+    _, contours, _ = cv2.findContours(morph, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    maskk = np.zeros((gray_img.shape[0], gray_img.shape[1])).astype(np.uint8)
+    for c in contours:
+        cv2.drawContours(maskk, [c], 0, (255, 255, 255), cv2.FILLED)
+    var = otsu_var(img)
+    if var >= 1.0e17:
+        alpha = 0.8
+    else:
+        alpha = 0.2
+    th3 = cv2.addWeighted(otsu_th, alpha, maskk, 1 - alpha, 0)
+    _, th3 = cv2.threshold(th3, 200, 255, cv2.THRESH_BINARY)
+
+    return blur, th, th3
 
 
 def frame_preprocess(img, params):
@@ -110,10 +124,10 @@ def auto_alpha_beta(img):
     alpha = 1.2
 
     # 2 method
-    """gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     percent = np.percentile(gray_img, 90)
     alpha = (255 / percent)
-    beta = 0"""
+    #beta = 0
 
     return alpha, beta
 
@@ -146,3 +160,31 @@ def simplify_contour(contour, n_corners=4):
             ub = (lb + ub)/2.
         else:
             return approx
+
+
+def otsu_var(img):
+    histogram, _ = np.histogram(img, bins=256, range=(0,255))
+
+    x = np.arange(256)
+
+    otsu_th = 0
+    otsu_var = 0
+
+    for t in range(256):
+        w1 = np.sum(histogram[:t+1])
+        w2 = np.sum(histogram[t+1:])
+
+        mean1 = np.sum(histogram[:t+1]*x[:t+1])
+        if w1 != 0:
+            mean1 = mean1 / w1
+        mean2 = np.sum(histogram[t+1:]*x[t+1:])
+        if w2 != 0:
+            mean2 = mean2 / w2
+
+        var = w1 * w2 * (mean1 - mean2)**2
+        if var >= otsu_var:
+            otsu_var = var
+            otsu_th = t
+
+    out = otsu_th
+    return otsu_var

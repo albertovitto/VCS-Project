@@ -15,8 +15,23 @@ DATASET_FOLDER_PATH = os.path.join("..", "..", "dataset")
 DB_FOLDER_PATH = os.path.join("..", "..", "dataset", "paintings_db")
 FEATURES_FOLDER_PATH = os.path.join("..", "..", "dataset", "features_db")
 
+RETRIEVAL = "retrieval"
+CLASSIFICATION = "classification"
+eval_mode = [RETRIEVAL, CLASSIFICATION]
 
-def eval_test_set(iou_threshold=0.5, rank_scope=5, params=conf, verbose=False):
+
+def eval_test_set(mode=RETRIEVAL, iou_threshold=0.5, rank_scope=5, params=conf, verbose=False):
+    assert mode in eval_mode
+    assert 0 <= iou_threshold <= 1
+    assert 1 <= rank_scope <= 95
+    assert isinstance(verbose, bool)
+
+    if mode == CLASSIFICATION:
+        rank_scope = 1
+        use_extra_check = True
+    else:
+        use_extra_check = False
+
     test_set_dict = {}
     for filename in os.listdir(TEST_SET_FOLDER_PATH):
         video_index, frame_index = filename.split("_", 1)
@@ -29,6 +44,9 @@ def eval_test_set(iou_threshold=0.5, rank_scope=5, params=conf, verbose=False):
     retrieval = PaintingRetrieval(db_dir_path=DB_FOLDER_PATH, files_dir_path=DATASET_FOLDER_PATH)
     retrieval.train()
     #retrieval = PaintingRet(db_path=DB_FOLDER_PATH, features_db_path=FEATURES_FOLDER_PATH)
+
+    if verbose:
+        print("Testing in {} mode [rank_scope={}, iou_th={}]...".format(mode, rank_scope, iou_threshold))
 
     results = {}
     for video in test_set_dict.keys():
@@ -43,9 +61,12 @@ def eval_test_set(iou_threshold=0.5, rank_scope=5, params=conf, verbose=False):
             gt_painting_bbs = gt_bbs["paintings"]
 
             should_continue = False
-            for painting in gt_painting_bbs:
-                if painting["label"] != -1:
-                    should_continue = True
+            if mode == RETRIEVAL:
+                for painting in gt_painting_bbs:
+                    if painting["label"] != -1:
+                        should_continue = True
+            else:
+                should_continue = True
 
             if should_continue:
                 for i, bb in enumerate(painting_bbs):
@@ -55,9 +76,9 @@ def eval_test_set(iou_threshold=0.5, rank_scope=5, params=conf, verbose=False):
                         iou_scores.append(iou)
 
                     if len(iou_scores) != 0 and np.max(iou_scores) >= iou_threshold:
-                        rank, _ = retrieval.predict(rois[i])
+                        rank, _ = retrieval.predict(rois[i], use_extra_check=use_extra_check)
                         gt_label = gt_painting_bbs[np.argmax(iou_scores)]["label"]
-                        if gt_label == -1:
+                        if mode == RETRIEVAL and gt_label == -1:
                             pass
                         elif gt_label in rank[:rank_scope]:
                             position = rank[:rank_scope].index(gt_label) + 1

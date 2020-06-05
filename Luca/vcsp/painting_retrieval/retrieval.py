@@ -112,7 +112,6 @@ class PaintingRetrieval:
             # test_hist = cv2.calcHist([test_img], [0, 1, 2], None, [256, 256, 256], [0, 256, 0, 256, 0, 256])
 
             ret = cv2.compareHist(rank0_hist, test_hist, method=cv2.HISTCMP_INTERSECT)
-            print(ret)
             if ret < 0.5:  # RGB => 2200, GRAY => 50000, NORM + GRAY => 0.5
                 rank_keys.insert(0, -1)
                 rank_values.insert(0, -1)
@@ -122,7 +121,6 @@ class PaintingRetrieval:
             rank0_img = cv2.imread(os.path.join(self.db_dir_path, "{:03d}.png".format(rank_keys[0])))
             gray_rank0_img = cv2.cvtColor(rank0_img, cv2.COLOR_BGR2GRAY)
             kp_rank0, dsc_rank0 = self.sift.detectAndCompute(gray_rank0_img, None)
-            # dsc_rank0 = np.load(os.path.join("..", "..", "dataset", "features_db", "features_{}.npy".format(rank_keys[0])))
 
             matches = self.flann.knnMatch(dsc, dsc_rank0, k=2)
             good = []

@@ -16,12 +16,12 @@ if __name__ == '__main__':
     db_dir_path = os.path.join("..", "..", "dataset", "paintings_db")
     files_dir_path = os.path.join("..", "..", "dataset")
 
-    # retrieval = PaintingRetrieval(db_dir_path, files_dir_path)
-    # retrieval.train()
+    retrieval = PaintingRetrieval(db_dir_path, files_dir_path)
+    retrieval.train()
 
-    db_path = os.path.join("..", "..", "dataset", "paintings_db")
+    """db_path = os.path.join("..", "..", "dataset", "paintings_db")
     features_db_path = os.path.join("..", "..", "dataset", "features_db")
-    retrieval = PaintingRet(db_dir_path, features_db_path)
+    retrieval = PaintingRet(db_dir_path, features_db_path)"""
 
     # video_name = '000/VIRB0393.MP4'
     video_name = '001/GOPR5826.MP4'
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     video_path = '../../dataset/videos/%s' % video_name
 
     dict = read_dict_for_test_set()
-    video_path = dict['009']
+    video_path = dict['010']
 
     video = cv2.VideoCapture(video_path)
 
@@ -61,7 +61,7 @@ if __name__ == '__main__':
                 cv2.waitKey(-1)
             if key == ord('r'):  # show rois with image retrieval
                 for i, roi in enumerate(rois):
-                    rank, _ = retrieval.predict(roi)
+                    rank, _ = retrieval.predict(roi, use_extra_check=True)
                     cv2.putText(roi, "{}".format(i), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3,
                                 False)
                     print("Roi {} - rank = {}".format(i, rank))
