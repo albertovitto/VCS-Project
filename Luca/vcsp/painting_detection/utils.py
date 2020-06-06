@@ -48,6 +48,7 @@ def frame_preprocess(img, params):
     th = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, block_size, params["THRESHOLD_C"])
 
     morph = cv2.morphologyEx(th, cv2.MORPH_CLOSE, np.ones((5, 5)), iterations=3)
+    # morph = cv2.morphologyEx(morph, cv2.MORPH_DILATE, np.ones((3, 3)), iterations=1)
 
     return blur, th, morph
 
@@ -127,7 +128,9 @@ def auto_alpha_beta(img):
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     percent = np.percentile(gray_img, 90)
     alpha = (255 / percent)
-    #beta = 0
+    beta = 0
+    #beta = beta / 2
+    alpha = 2
 
     return alpha, beta
 
