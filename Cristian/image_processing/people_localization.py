@@ -2,10 +2,9 @@ import os
 import cv2
 import numpy as np
 from Cristian.image_processing.retrieval_utils import get_painting_info_from_csv
-
-# distance
 from Luca.vcsp.people_localization.utils import highlight_map_room
 
+# distance
 CENTER_DISTANCE = 0
 
 # weighting

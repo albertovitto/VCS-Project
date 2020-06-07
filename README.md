@@ -2,9 +2,13 @@
 This project was developed as part of the Vision and Cognitive Systems course as an exam in the Master's Degree in Computer Engineering in Unimore.
 
 ## Contributors
-- Luca Denti
-- Cristian Mercadante
-- Alberto Vitto
+
+| Name                | Email                                                           |
+| ------------------- | --------------------------------------------------------------- |
+| Luca Denti          | [`211805@studenti.unimore.it`](mailto:211805@studenti.unimore.it) |
+| Cristian Mercadante | [`213808@studenti.unimore.it`](mailto:213808@studenti.unimore.it) |
+| Alberto Vitto       | [`214372@studenti.unimore.it`](mailto:214372@studenti.unimore.it) |
+
 
 ## Tasks
 Given a dataset of videos taken in _"Gallerie Estensi"_ in Modena together with pictures of its paintings, it was required to implement a software in Python capable of detecting paintings in videos and retrieve the original image from the dataset.
@@ -32,8 +36,9 @@ Optional tasks:
 
 ## Instructions
 - Make sure to have installed all requirements (see `requirements.txt`).
-- PyTorch requires a separate installation, depending from the system (Cuda version, CPU, etc.)
+- PyTorch requires a separate installation, depending from the system (CUDA version, CPU, etc.)
 - Place the `dataset` folder at the same level as `estensi.py` and the `estensi` package.
+- Place [`yolov3.weights`](https://pjreddie.com/media/files/yolov3.weights) into `estensi/people_detection`.
 - Run:
   ```bash
   estensi.py --video <path_to_video> [--include_steps] [--skip_frames]

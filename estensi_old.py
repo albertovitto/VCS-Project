@@ -1,15 +1,26 @@
+## main definitivo per il progetto!
+# Prendetevi pure la libertà di modificare quello che vi pare,
+# mi sono limitato a riportare lo scheletro.
+## Per modificare i parametri di input su PyCharm senza lanciare da linea di comando
+# accanto al pulsante play in alto a destra,
+# cliccare sulla freccia accanto nome del modulo da avviare.
+# Cliccare poi su 'Edit Configurations...'
+# Modificare il campo parameters.
+# Oppure tramite shortcut: Shift+Alt+F10 seguito da F4
+
 import argparse
 import os
 import cv2
 import numpy as np
-from estensi.people_detection.detection import Yolo
-import estensi.people_localization.localization as pl
-from estensi.people_localization.localization import PeopleLocator
-from estensi.painting_rectification.rectification import sift_feature_matching_and_homography
-from estensi.painting_detection.detection import get_bb
-from estensi.painting_rectification.rectification import rectify
-from estensi.painting_retrieval.retrieval import PaintingRetrieval
-from estensi.utils import draw_bb, show_on_row
+from Cristian.YOLOv3.test_yolo import Yolo
+import Cristian.image_processing.people_localization as pl
+from Cristian.image_processing.people_localization import PeopleLocator
+from Cristian.image_processing.retrieval_utils import sift_feature_matching_and_homography
+from Luca.vcsp.painting_detection.detection import get_bb
+from Luca.vcsp.painting_rectification.rectification import rectify
+from Luca.vcsp.painting_retrieval.retrieval import PaintingRetrieval
+from Luca.vcsp.utils.drawing import draw_bb
+from Luca.vcsp.utils.multiple_show import show_on_row
 
 
 def arg_parse():
@@ -31,7 +42,7 @@ def main():
     retrieval = PaintingRetrieval(db_dir_path, files_dir_path)
     retrieval.train()
 
-    yolo = Yolo(yolo_path=os.path.join(path, "estensi", "people_detection"))
+    yolo = Yolo(yolo_path=os.path.join(path, "Cristian", "YOLOv3"))
 
     people_locator = PeopleLocator(distance=pl.CENTER_DISTANCE, weighting=pl.SQRT_AREA, voting=True,
                                    verbose=args.include_steps, data_path=files_dir_path)
