@@ -114,8 +114,9 @@ def main():
                     cv2.imshow("Roi {}".format(i), out)
 
                 # localization
-                for id, person_bb in enumerate(people_bbs):
-                    room = people_locator.localize_person(person_bb, painting_bbs, retrievals, id=id, show_map=True)
+                # for id, person_bb in enumerate(people_bbs):
+                #     room = people_locator.localize_person(person_bb, painting_bbs, retrievals, id=id, show_map=True)
+                room = pl.localize_paintings(retrievals, data_path=files_dir_path, verbose=args.include_steps)
 
                 cv2.waitKey(-1)
                 for i, roi in enumerate(rois):

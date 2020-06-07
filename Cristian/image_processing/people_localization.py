@@ -120,6 +120,30 @@ class PeopleLocator():
         return room
 
 
+def localize_paintings(painting_retrievals, data_path='../../dataset', verbose=False):
+    votes = np.zeros(shape=(22))
+    for i, pr in enumerate(painting_retrievals):
+        # if retrieval failed, skip
+        if pr is None:
+            continue
+        _, _, room = get_painting_info_from_csv(pr, path=os.path.join(data_path, 'data.csv'))
+        votes[room - 1] += 1
+
+    room = None
+    if np.any(votes):
+        if verbose:
+            print("Votes:")
+            for i, v in enumerate(votes):
+                print("Room #{} = {}".format(i + 1, v))
+        room = np.argmax(votes) + 1
+        map_img = highlight_map_room(room, map_path=os.path.join(data_path, 'map.png'))
+        cv2.imshow("Room: {}".format(room), map_img)
+    else:
+        print("Cannot find room.")
+
+    return room
+
+
 def main():
     # person = (270, 100, 250, 300)
     person = (1200, 100, 100, 100)
