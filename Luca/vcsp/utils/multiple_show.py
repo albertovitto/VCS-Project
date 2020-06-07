@@ -76,10 +76,10 @@ def show_on_col(img1, img2):
     return output
 
 
-def resize_to_fit(img):
+def resize_to_fit(img, dw=1920, dh=1080):
     h, w = img.shape[0:2]
-    dist_w = max(0, w - 1920)
-    dist_h = max(0, h - 1080)
+    dist_w = max(0, w - dw)
+    dist_h = max(0, h - dh)
 
     if dist_h == 0 and dist_w == 0:
         return img

@@ -7,6 +7,8 @@ from scipy.spatial import distance
 from Luca.vcsp.painting_rectification.utils import get_four_coordinates
 from Luca.vcsp.utils import multiple_show
 from Alberto.could_not_find_matches import could_not_find_matches
+from Luca.vcsp.utils.multiple_show import resize_to_fit
+
 
 def rectify(img, include_steps=False):
 
@@ -80,7 +82,7 @@ def rectify_with_retrieval(img, ground_truth):
     kp_ground_truth, des_ground_truth = sift_ground_truth.detectAndCompute(ground_truth, None)
     out_ground_truth = cv2.drawKeypoints(ground_truth, kp_ground_truth, None)
 
-    MIN_MATCH_COUNT = 5
+    MIN_MATCH_COUNT = 4
     bf = cv2.BFMatcher()
     matches = bf.knnMatch(des_img, des_ground_truth, k=2)
 
@@ -106,6 +108,7 @@ def rectify_with_retrieval(img, ground_truth):
     if matches_mask:
         ground_truth_h, ground_truth_w, _ = ground_truth.shape
         rectified = cv2.warpPerspective(src=img, M=M, dsize=(ground_truth_w, ground_truth_h))
+        rectified = resize_to_fit(rectified, dh=img.shape[0], dw=img.shape[1])
 
     output = cv2.drawMatches(img, kp_img, ground_truth, kp_ground_truth, good, None,
                           matchColor=(0, 255, 0), singlePointColor=None, matchesMask=matches_mask, flags=2)
