@@ -3,7 +3,7 @@ conf = {
         "THRESHOLD_BLOCK_SIZE_FACTOR": 50,
         "THRESHOLD_C": 5,
 
-        "MIN_HULL_AREA_PERCENT_OF_MAX_HULL": 0.1,  # 0.15
+        "MIN_HULL_AREA_PERCENT_OF_MAX_HULL": 0.08,  # 0.15
         "MIN_HULL_AREA_PERCENT_OF_IMG": 0.01,
 
         "MIN_POLY_POINTS": 3,
