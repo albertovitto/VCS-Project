@@ -15,6 +15,7 @@ from estensi.utils import draw_bb, show_on_row
 def arg_parse():
     parser = argparse.ArgumentParser(description='Vision and Cognitive Systems project: Gallerie Estensi')
     parser.add_argument('--video', dest='video', help='path of the selected video', type=str, required=True)
+    parser.add_argument('--folder', dest='folder', help='path of a folder with different videos', type=str)
     parser.add_argument('--include_steps', dest='include_steps', action='store_true',
                         help='toggles additional screens that show more info (like intermediate steps)')
     parser.add_argument('--skip_frames', dest='skip_frames', action='store_true', help='toggles frame skip')
@@ -35,6 +36,10 @@ def main():
 
     people_locator = PeopleLocator(distance=pl.CENTER_DISTANCE, weighting=pl.SQRT_AREA, voting=True,
                                    verbose=args.include_steps, data_path=files_dir_path)
+
+    if args.folder is not None:
+        folder_path = args.folder
+        print(folder_path)
 
     video_path = args.video
     video = cv2.VideoCapture(video_path)
