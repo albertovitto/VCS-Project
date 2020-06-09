@@ -68,6 +68,6 @@ Otherwise, it will be evaluated with the passed configuration.
   painting_retrieval_evaluation.py --mode <mode_str> [--rank_scope <scope_int>]
   ```
   where:
-  - `--mode` is the mode (classification, retrieval) in which the evaluation is done,
+  - `--mode` is the mode ['classification', 'retrieval'] in which the evaluation is done,
   - `--rank_scope` is the scope of the ranking list where a relevant item can be found. It will be ignored in classification mode.
 
