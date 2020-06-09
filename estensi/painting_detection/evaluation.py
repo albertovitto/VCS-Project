@@ -5,7 +5,6 @@ import itertools
 
 import cv2
 import numpy as np
-from sklearn.externals.joblib import parallel_backend, Parallel, delayed
 
 from estensi.painting_detection.constants import conf
 from estensi.painting_detection.detection import get_bb
@@ -150,19 +149,6 @@ def eval_test_set(test_set_dir_path, ground_truth_set_dir_path, iou_threshold=0.
 
 
 def hyperparameters_gridsearch(test_set_dir_path, ground_truth_set_dir_path, param_grid):
-
-    def apply(x):
-        print("Testing configuration {} ...".format(x))
-        params = copy.deepcopy(conf)
-        for key in x.keys():
-            params[key] = x[key]
-
-        avg_precision, avg_recall = eval_test_set(test_set_dir_path=test_set_dir_path,
-                                                  ground_truth_set_dir_path=ground_truth_set_dir_path,
-                                                  params=params)
-        f1 = f1_score(avg_precision, avg_recall)
-        print("f1 = {:.2f}, p = {:.2f}, r = {:.2f} for configuration {}".format(f1, avg_precision, avg_recall, x))
-
     keys, values = zip(*param_grid.items())
 
     hyperparameters_list = []
@@ -171,9 +157,15 @@ def hyperparameters_gridsearch(test_set_dir_path, ground_truth_set_dir_path, par
         hyperparameters_list.append(hyperparameters)
 
     start_time = time.time()
-    for i in range(0, len(hyperparameters_list), 4):
+    for i in hyperparameters_list:
+        print("Testing configuration {} ...".format(i))
+        params = copy.deepcopy(conf)
+        for key in i.keys():
+            params[key] = i[key]
 
-        with parallel_backend('threading'):
-            Parallel()(delayed(apply)(x) for x in hyperparameters_list[i:i+4])
+        f1, avg_precision, avg_recall = eval_test_set(test_set_dir_path=test_set_dir_path,
+                                                      ground_truth_set_dir_path=ground_truth_set_dir_path,
+                                                      params=params)
+        print("f1 = {:.2f}, p = {:.2f}, r = {:.2f} for configuration {}".format(f1, avg_precision, avg_recall, i))
 
     print("--- {:.2f} sec ---".format(time.time() - start_time))
