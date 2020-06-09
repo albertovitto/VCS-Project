@@ -49,4 +49,25 @@ Optional tasks:
   - `--frame_skip` makes the script skip frames during analysis. 
 
 ## Evaluation
-...
+#### Painting detection
+- The script will create a `test_set` folder under the `dataset` folder, containing the frames captured from a randomly selected set  of videos.
+- Place the `ground_truth` folder under the `dataset` folder.
+- If no argument is passed to the script, the test_set will be evaluated with the system hyperparameters configuration.
+Otherwise, it will be evaluated with the passed configuration.
+- Run:
+  ```bash
+  painting_detection_evaluation.py [--param <param_grid_file_path>]
+  ```
+  where:
+  - `--param` is the path of the json file containing the parameters grid for grid search evaluation.
+#### Painting retrieval
+- The script will create a `test_set` folder under the `dataset` folder, containing the frames captured from a randomly selected set  of videos.
+- Place the `ground_truth` folder under the `dataset` folder.
+- Run:
+  ```bash
+  painting_retrieval_evaluation.py --mode <mode_str> [--rank_scope <scope_int>]
+  ```
+  where:
+  - `--mode` is the mode (classification, retrieval) in which the evaluation is done,
+  - `--rank_scope` is the scope of the ranking list where a relevant item can be found. It will be ignored in classification mode.
+
