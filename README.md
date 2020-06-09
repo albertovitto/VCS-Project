@@ -52,7 +52,7 @@ Optional tasks:
 #### Painting detection
 - The script will create a `test_set` folder under the `dataset` folder, containing the frames captured from a randomly selected set  of videos.
 - Place the `ground_truth` folder under the `dataset` folder.
-- If no argument is passed to the script, the test_set will be evaluated with the system hyperparameters configuration.
+- If no argument is passed to the script, the test set will be evaluated with the system hyperparameters configuration.
 Otherwise, it will be evaluated with the passed configuration.
 - Run:
   ```bash
