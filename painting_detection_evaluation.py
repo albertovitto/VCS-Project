@@ -32,6 +32,14 @@ def main():
         # Evaluate painting detection with specific hyperparameters
         file = open(args.param, "r")
         param_grid = json.load(file)
+
+        # Example of param_grid
+        # param_grid = {
+        #    "MIN_ROTATED_BOX_AREA_PERCENT": [0.7, 0.8, 0.9],
+        #    "MIN_ROTATED_ELLIPSE_AREA_PERCENT": [0.5, 0.6, 0.7],
+        #    "MIN_POLY_AREA_PERCENT": [0.5, 0.6, 0.7, 0.9]
+        # }
+
         hyperparameters_gridsearch(test_set_dir_path=test_set_dir_path,
                                    ground_truth_set_dir_path=ground_truth_set_dir_path,
                                    param_grid=param_grid)
