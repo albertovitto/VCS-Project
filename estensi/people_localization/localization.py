@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 from estensi.people_localization.utils import get_painting_info_from_csv, highlight_map_room
-
+from estensi.utils import could_not_find_room, resize_image
 # distance
 CENTER_DISTANCE = 0
 
@@ -135,8 +135,15 @@ def localize_paintings(painting_retrievals, data_path='../../dataset', verbose=F
                 print("Room #{} = {}".format(i + 1, v))
         room = np.argmax(votes) + 1
         map_img = highlight_map_room(room, map_path=os.path.join(data_path, 'map.png'))
-        cv2.imshow("Room: {}".format(room), map_img)
+        cv2.imshow("Room", map_img)
+        # cv2.imshow("Room: {}".format(room), map_img)
     else:
         print("Cannot find room.")
+
+        map_img = cv2.imread(os.path.join(data_path, 'map.png'))
+        h, w, c = map_img.shape
+        out_map = np.hstack((map_img, could_not_find_room(h, w, c)))
+        out_map = resize_image(90, out_map)
+        cv2.imshow("Cannot find room", out_map)
 
     return room

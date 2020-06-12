@@ -9,7 +9,7 @@ from estensi.painting_rectification.rectification import sift_feature_matching_a
 from estensi.painting_detection.detection import get_bb
 from estensi.painting_rectification.rectification import rectify
 from estensi.painting_retrieval.retrieval import PaintingRetrieval
-from estensi.utils import draw_bb, show_on_row
+from estensi.utils import draw_bb, show_on_row, resize_image, could_not_find_matches
 
 
 def arg_parse():
@@ -69,8 +69,7 @@ def main():
 
                 draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(0, 0, 255), label="person_{}".format(id))
 
-            cv2.imshow("Painting and people detection", output)
-
+            cv2.imshow("Painting and people detection", resize_image(90, output))
             key = cv2.waitKey(1)
             if key == ord('q'):  # quit
                 break
@@ -89,6 +88,8 @@ def main():
                         print("Cannot retrieve painting for Roi {}".format(i))
                         retrievals.append(None)
                         out = show_on_row(roi, rectify(roi))
+                        h, w, c = out.shape
+                        out = np.hstack((out, could_not_find_matches(h, w, c)))
                         cv2.imshow("Roi {}".format(i), out)
                         continue
 
@@ -105,6 +106,8 @@ def main():
                         out = show_on_row(show_on_row(roi, ground_truth), warped)
                     else:
                         out = show_on_row(roi, ground_truth)
+                        h, w, c = out.shape
+                        out = np.hstack((out, could_not_find_matches(h, w, c)))
                     cv2.imshow("Roi {}".format(i), out)
 
                 # localization
@@ -115,6 +118,8 @@ def main():
                 cv2.waitKey(-1)
                 for i, roi in enumerate(rois):
                     cv2.destroyWindow("Roi {}".format(i))
+                cv2.destroyWindow("Cannot find room")
+                cv2.destroyWindow("Room")
 
             if skip_frames:
                 pos_frames += video.get(cv2.CAP_PROP_FPS)

@@ -18,6 +18,7 @@ def main():
     # video_path = "dataset/videos/003/GOPR1940.MP4"
     # video_path = "dataset/videos/005/GOPR2043.MP4"
     # video_path = "dataset/videos/011/3.mp4"
+    video_path = "../dataset/videos/010/VID_20180529_112706.mp4"
 
     video = cv2.VideoCapture(video_path)
 

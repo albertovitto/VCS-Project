@@ -13,10 +13,10 @@ class Yolo():
         self.num_classes = num_classes
         self.classes = load_classes(os.path.join(yolo_path, 'data', 'coco.names'))
         self.bbox_attrs = 5 + self.num_classes
-        print("Loading network.....")
+        print("Loading Yolo v3 network.....")
         self.model = Darknet(os.path.join(yolo_path, 'cfg', 'yolov3.cfg'))
         self.model.load_weights(os.path.join(yolo_path, 'yolov3.weights'))
-        print("Network successfully loaded")
+        print("Yolo v3 network successfully loaded")
         self.model.net_info["height"] = "416"
         self.inp_dim = int(self.model.net_info["height"])
         assert self.inp_dim % 32 == 0
