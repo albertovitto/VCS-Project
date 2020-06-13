@@ -13,7 +13,9 @@ def frame_preprocess(img, params):
     block_size = int(np.ceil(img.shape[1] / params["THRESHOLD_BLOCK_SIZE_FACTOR"]) // 2 * 2 + 1)
     th = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, block_size, params["THRESHOLD_C"])
 
-    morph = cv2.morphologyEx(th, cv2.MORPH_CLOSE, np.ones((5, 5)), iterations=3)
+    morph = cv2.morphologyEx(th, cv2.MORPH_OPEN, np.ones((3, 3)), iterations=1)
+    morph = cv2.morphologyEx(morph, cv2.MORPH_CLOSE, np.ones((5, 5)), iterations=4)
+    # morph = cv2.morphologyEx(th, cv2.MORPH_CLOSE, np.ones((5, 5)), iterations=3)
 
     return blur, th, morph
 
@@ -48,7 +50,7 @@ def is_painting(hull, poly, bounding_box, rotated_box, ellipse, img, params):
 
     roi = get_roi(bounding_box, img)
     gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-    if np.percentile(gray_roi, 60) >= params["MAX_GRAY_60_PERCENTILE"]:
+    if np.percentile(gray_roi, 80) >= params["MAX_GRAY_80_PERCENTILE"]:
         return False
 
     blur_roi = cv2.GaussianBlur(roi, (7, 7), 0)

@@ -15,7 +15,7 @@ conf = {
 
         "MAX_RATIO_SIZE": 3,
 
-        "MAX_GRAY_60_PERCENTILE": 170,
+        "MAX_GRAY_80_PERCENTILE": 200,
 
         "MIN_VARIANCE": 18,
 
