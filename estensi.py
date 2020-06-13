@@ -4,12 +4,12 @@ import cv2
 import numpy as np
 from estensi.people_detection.detection import Yolo
 import estensi.people_localization.localization as pl
-from estensi.people_localization.localization import PeopleLocator
+from estensi.people_localization.localization import PeopleLocator, get_painting_info_from_csv
 from estensi.painting_rectification.rectification import sift_feature_matching_and_homography
 from estensi.painting_detection.detection import get_bb
 from estensi.painting_rectification.rectification import rectify
 from estensi.painting_retrieval.retrieval import PaintingRetrieval
-from estensi.utils import draw_bb, show_on_row, resize_image, could_not_find_matches
+from estensi.utils import draw_bb, show_on_row, resize_image, could_not_find_matches, resize_to_fit
 
 
 def arg_parse():
@@ -49,9 +49,11 @@ def main():
     lost_frames = 0
     pos_frames = 0
     skip_frames = args.skip_frames
+    current_frame = 0
 
     while video.isOpened():
         ret, frame = video.read()
+        current_frame = int(video.get(cv2.CAP_PROP_POS_FRAMES))
 
         if ret:
             output, rois, painting_bbs = get_bb(frame, include_steps=args.include_steps)
@@ -69,15 +71,22 @@ def main():
 
                 draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(0, 0, 255), label="person_{}".format(id))
 
-            cv2.imshow("Painting and people detection", resize_image(90, output))
+            cv2.imshow("Painting and people detection", resize_to_fit(output))
             key = cv2.waitKey(1)
             if key == ord('q'):  # quit
                 break
             if key == ord('p'):  # pause
+                print("+-----------------------------------------------+")
+                print("Video paused at frame #{}".format(current_frame))
+                print("+-----------------------------------------------+")
                 cv2.waitKey(-1)
             if key == ord('r'):
                 # retrieve paintings
                 retrievals = []
+                titles = []
+                print("+-----------------------------------------------+")
+                print("Video paused for retrieval at frame #{}".format(current_frame))
+
                 for i, roi in enumerate(rois):
                     rank, _ = retrieval.predict(roi, use_extra_check=True)
                     cv2.putText(roi, "{}".format(i), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3, False)
@@ -87,13 +96,17 @@ def main():
                     if rank[0] == -1:
                         print("Cannot retrieve painting for Roi {}".format(i))
                         retrievals.append(None)
+                        titles.append(None)
                         out = show_on_row(roi, rectify(roi))
                         h, w, c = out.shape
                         out = np.hstack((out, could_not_find_matches(h, w, c)))
-                        cv2.imshow("Roi {}".format(i), out)
+                        cv2.imshow("Roi {}".format(i), resize_to_fit(out))
                         continue
 
+                    title, author, room = get_painting_info_from_csv(painting_id=rank[0], path=os.path.join(files_dir_path, "data.csv"))
+                    print("Title: {} \nAuthor: {} \nRoom: {}".format(title, author, room))
                     retrievals.append(rank[0])
+                    titles.append(title + " - " + author)
 
                     ground_truth = cv2.imread(os.path.join(db_dir_path, "{:03d}.png".format(rank[0])))
                     warped, matches = sift_feature_matching_and_homography(roi, ground_truth,
@@ -108,16 +121,22 @@ def main():
                         out = show_on_row(roi, ground_truth)
                         h, w, c = out.shape
                         out = np.hstack((out, could_not_find_matches(h, w, c)))
-                    cv2.imshow("Roi {}".format(i), out)
+                    out = resize_to_fit(out, dw=1920, dh=1080)
+                    cv2.imshow("{}".format(title + " - " + author), out)
 
                 # localization
                 # for id, person_bb in enumerate(people_bbs):
                 #     room = people_locator.localize_person(person_bb, painting_bbs, retrievals, id=id, show_map=True)
                 room = pl.localize_paintings(retrievals, data_path=files_dir_path, verbose=args.include_steps)
 
+                print("+-----------------------------------------------+")
                 cv2.waitKey(-1)
-                for i, roi in enumerate(rois):
-                    cv2.destroyWindow("Roi {}".format(i))
+                for i, (title) in enumerate(titles):
+                    if title is None:
+                        cv2.destroyWindow("Roi {}".format(i))
+                    else:
+                        cv2.destroyWindow("{}".format(title))
+
                 cv2.destroyWindow("Cannot find room")
                 cv2.destroyWindow("Room")
 
