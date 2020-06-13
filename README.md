@@ -47,6 +47,9 @@ Optional tasks:
   - `--video` targets the video in the dataset to analyze,
   - `--include_steps` tells the script to show useful debug information,
   - `--frame_skip` makes the script skip frames during analysis. 
+- While the video is playing, press the "R" button to start the painting retrieval, rectification and localization. You will see the outputs in new windows and in the command line for more details. Press any keyboard buttons to resume the video.
+- While the video is playing, press the "P" button to pause the video, and any buttons to resume it.
+- While the video is playing, press the "Q" button to quit the video.
 
 ## Evaluation
 #### Painting detection
