@@ -106,7 +106,8 @@ def main():
                     title, author, room = get_painting_info_from_csv(painting_id=rank[0], path=os.path.join(files_dir_path, "data.csv"))
                     print("Title: {} \nAuthor: {} \nRoom: {}".format(title, author, room))
                     retrievals.append(rank[0])
-                    titles.append(title + " - " + author)
+                    title = title if str(author) == 'nan' else title + " - " + author
+                    titles.append(title)
 
                     ground_truth = cv2.imread(os.path.join(db_dir_path, "{:03d}.png".format(rank[0])))
                     warped, matches = sift_feature_matching_and_homography(roi, ground_truth,
@@ -122,7 +123,7 @@ def main():
                         h, w, c = out.shape
                         out = np.hstack((out, could_not_find_matches(h, w, c)))
                     out = resize_to_fit(out, dw=1920, dh=1080)
-                    cv2.imshow("{}".format(title + " - " + author), out)
+                    cv2.imshow("{}".format(title), out)
 
                 # localization
                 # for id, person_bb in enumerate(people_bbs):
