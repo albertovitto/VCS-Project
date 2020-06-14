@@ -108,12 +108,21 @@ Optional tasks:
 - Place [`yolov3.weights`](https://pjreddie.com/media/files/yolov3.weights) into `estensi/people_detection`.
 - Run:
   ```bash
-  estensi.py --video <path_to_video> [--include_steps] [--skip_frames]
+  estensi.py --video <path/to/video> [--include_steps] [--skip_frames]
   ```
   where:
   - `--video` targets the video in the dataset to analyze,
   - `--include_steps` tells the script to show useful debug information,
   - `--frame_skip` makes the script skip frames during analysis. 
+- Alternatively run:
+    ```bash
+  estensi.py --folder </path/to/folder/> [--include_steps] [--skip_frames]
+  ```
+  where:
+  - `--folder` targets the folder containing different videos to analyze,
+  - `--include_steps` tells the script to show useful debug information,
+  - `--frame_skip` makes the script skip frames during analysis. 
+
 - While the video is playing, press the "R" button to start the painting retrieval, rectification and localization. You will see the outputs in new windows and in the command line for more details. Press any keyboard buttons to resume the video.
 - While the video is playing, press the "P" button to pause the video, and any buttons to resume it.
 - While the video is playing, press the "Q" button to quit the video.
