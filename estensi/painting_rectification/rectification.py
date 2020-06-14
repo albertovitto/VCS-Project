@@ -3,7 +3,7 @@ import numpy as np
 import copy
 from scipy.spatial import distance
 from estensi.painting_rectification.utils import get_four_coordinates
-from estensi.utils import show_on_row, show_on_col
+from estensi.utils import show_on_row, show_on_col, resize_to_fit
 
 
 def sift_feature_matching_and_homography(roi, img, include_steps=False):
@@ -51,6 +51,8 @@ def sift_feature_matching_and_homography(roi, img, include_steps=False):
     if matchesMask:
         img_h, img_w, _ = img.shape
         warped = cv2.warpPerspective(src=roi, M=M, dsize=(img_w, img_h))
+        roi_h, roi_w, _ = roi.shape
+        warped = resize_to_fit(warped, dw=roi_w, dh=roi_h)
 
     out = cv2.drawMatches(roi, kp_roi, img, kp_img, good, None, **draw_params)
 
