@@ -155,7 +155,7 @@ def main():
         for video_name in os.listdir(args.folder):
             print("Analysing {}...".format(args.folder + video_name))
             video_path = os.path.join(args.folder, video_name)
-            analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieval, yolo)
+            analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieval, yolo, people_locator)
 
     if args.video is not None:
         analyze_single_video(args.video, args, db_dir_path, files_dir_path, retrieval, yolo, people_locator)
