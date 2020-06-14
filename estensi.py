@@ -106,8 +106,8 @@ def main():
                     title, author, room = get_painting_info_from_csv(painting_id=rank[0], path=os.path.join(files_dir_path, "data.csv"))
                     print("Title: {} \nAuthor: {} \nRoom: {}".format(title, author, room))
                     retrievals.append(rank[0])
-                    title = title if str(author) == 'nan' else title + " - " + author
-                    titles.append(title)
+                    title = title if str(author) == 'nan' else str(title) + " - " + str(author)
+                    titles.append(str(title))
 
                     ground_truth = cv2.imread(os.path.join(db_dir_path, "{:03d}.png".format(rank[0])))
                     warped, matches = sift_feature_matching_and_homography(roi, ground_truth,

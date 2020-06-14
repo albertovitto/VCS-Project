@@ -34,6 +34,73 @@ Optional tasks:
 - [ ] Given a view taken from the 3D model, detect each painting and replace it with its corresponding picture in the paintings DB, appropriately deformed to match the 3D view.
 - [ ] Determine the distance of a person to the closest door: find the door, find the walls and the floor, try to compensate and predict distance.
 
+## Project structure
+  ```bash
+.
+├── dataset
+│   ├── data.csv
+│   ├── features_db.npy
+│   ├── ground_truth
+│   │   ├── 000_0.json
+│   │   ├── ...
+│   │   └── 014_9.json
+│   ├── img_features_db.npy
+│   ├── map.png
+│   ├── paintings_db
+│   │   ├── 000.png
+│   │   ├── ...
+│   │   └── 094.png
+│   ├── screenshots_3d_model
+│   │   ├── 100916250_542901693059216_8301339564534923264_n.jpg
+│   │   ├── ...
+│   │   └── 92018365_2773046682923472_1923690185153839104_n.jpg
+│   ├── test_set
+│   │   ├── 000_0.png
+│   │   └── ...
+│   └── videos
+│       ├── 000
+│       │   ├── VIRB0391.MP4
+│       │   └── ...
+│       ├── ...
+│       │   └── ...
+│       └── 014
+│           ├── VID_20180529_112517.mp4
+│           └── ...
+├── env
+├── estensi
+│   ├── painting_detection
+│   │   ├── constants.py
+│   │   ├── detection.py
+│   │   ├── evaluation.py
+│   │   └── utils.py
+│   ├── painting_rectification
+│   │   ├── rectification.py
+│   │   └── utils.py
+│   ├── painting_retrieval
+│   │   ├── evaluation.py
+│   │   ├── retrieval.py
+│   │   └── utils.py
+│   ├── people_detection
+│   │   ├── cfg
+│   │   │   └── yolov3.cfg
+│   │   ├── darknet.py
+│   │   ├── data
+│   │   │   └── coco.names
+│   │   ├── detection.py
+│   │   ├── preprocess.py
+│   │   ├── utils.py
+│   │   └── yolov3.weights
+│   ├── people_localization
+│   │   ├── localization.py
+│   │   └── utils.py
+│   └── utils.py
+├── estensi.py
+├── painting_detection_evaluation.py
+├── painting_retrieval_evaluation.py
+├── README.md
+└── requirements.txt
+  ```
+
 ## Instructions
 - Make sure to have installed all requirements (see `requirements.txt`).
 - PyTorch requires a separate installation, depending from the system (CUDA version, CPU, etc.)
