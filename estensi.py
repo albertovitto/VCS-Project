@@ -202,8 +202,6 @@ def main():
 
                         for i, roi in enumerate(rois):
                             rank, _ = retrieval.predict(roi, use_extra_check=True)
-                            cv2.putText(roi, "{}".format(i), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3,
-                                        False)
                             print("Roi {} - rank = {}".format(i, rank))
 
                             # if retrieval fails
@@ -223,7 +221,8 @@ def main():
                             print("Title: {} \nAuthor: {} \nRoom: {}".format(title, author, room))
                             retrievals.append(rank[0])
                             title = title if str(author) == 'nan' else str(title) + " - " + str(author)
-                            titles.append(str(title))
+                            title = "Roi {} - {}".format(i, title)
+                            titles.append(title)
 
                             ground_truth = cv2.imread(os.path.join(db_dir_path, "{:03d}.png".format(rank[0])))
                             warped, matches = sift_feature_matching_and_homography(roi, ground_truth,
@@ -319,7 +318,6 @@ def main():
 
                     for i, roi in enumerate(rois):
                         rank, _ = retrieval.predict(roi, use_extra_check=True)
-                        cv2.putText(roi, "{}".format(i), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3, False)
                         print("Roi {} - rank = {}".format(i, rank))
 
                         # if retrieval fails
@@ -337,7 +335,8 @@ def main():
                         print("Title: {} \nAuthor: {} \nRoom: {}".format(title, author, room))
                         retrievals.append(rank[0])
                         title = title if str(author) == 'nan' else str(title) + " - " + str(author)
-                        titles.append(str(title))
+                        title = "Roi {} - {}".format(i, title)
+                        titles.append(title)
 
                         ground_truth = cv2.imread(os.path.join(db_dir_path, "{:03d}.png".format(rank[0])))
                         warped, matches = sift_feature_matching_and_homography(roi, ground_truth,
