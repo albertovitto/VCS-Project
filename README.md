@@ -3,8 +3,8 @@ This project was developed as part of the Vision and Cognitive Systems course as
 
 ## Contributors
 
-| Name                | Email                                                           |
-| ------------------- | --------------------------------------------------------------- |
+| Name                | Email                                                             |
+| ------------------- | ----------------------------------------------------------------- |
 | Luca Denti          | [`211805@studenti.unimore.it`](mailto:211805@studenti.unimore.it) |
 | Cristian Mercadante | [`213808@studenti.unimore.it`](mailto:213808@studenti.unimore.it) |
 | Alberto Vitto       | [`214372@studenti.unimore.it`](mailto:214372@studenti.unimore.it) |
@@ -66,7 +66,7 @@ Optional tasks:
 │       └── 014
 │           ├── VID_20180529_112517.mp4
 │           └── ...
-├── env
+├── venv
 ├── estensi
 │   ├── painting_detection
 │   │   ├── constants.py
@@ -106,26 +106,21 @@ Optional tasks:
 - PyTorch requires a separate installation, depending from the system (CUDA version, CPU, etc.)
 - Place the `dataset` folder at the same level as `estensi.py` and the `estensi` package.
 - Place [`yolov3.weights`](https://pjreddie.com/media/files/yolov3.weights) into `estensi/people_detection`.
-- Run:
-  ```bash
-  estensi.py --video <path/to/video> [--include_steps] [--skip_frames]
-  ```
-  where:
-  - `--video` targets the video in the dataset to analyze,
-  - `--include_steps` tells the script to show useful debug information,
-  - `--frame_skip` makes the script skip frames during analysis. 
-- Alternatively run:
-    ```bash
-  estensi.py --folder </path/to/folder/> [--include_steps] [--skip_frames]
-  ```
-  where:
-  - `--folder` targets the folder containing different videos to analyze,
-  - `--include_steps` tells the script to show useful debug information,
-  - `--frame_skip` makes the script skip frames during analysis. 
 
-- While the video is playing, press the "R" button to start the painting retrieval, rectification and localization. You will see the outputs in new windows and in the command line for more details. Press any keyboard buttons to resume the video.
-- While the video is playing, press the "P" button to pause the video, and any buttons to resume it.
-- While the video is playing, press the "Q" button to quit the video.
+#### Arguments
+```bash
+estensi.py --video <path/to/video> [--include_steps] [--skip_frames]
+```
+where:
+- `--video` targets the video in the dataset to analyze,
+- `--folder` targets the folder containing different videos to analyze, 
+- `--include_steps` tells the script to show useful debug information,
+- `--frame_skip` makes the script skip frames during analysis. 
+
+#### Keys
+- `R` starts the painting retrieval, rectification and localization tasks. You will see the outputs in new windows and more details in the command line. Press any key to resume.
+- `P` pauses the video, and any buttons resumes.
+- `Q` quits the video. If `--folder` is specified, goes to the next video.
 
 ## Evaluation
 #### Painting detection
@@ -147,6 +142,6 @@ Otherwise, it will be evaluated with the passed configuration.
   painting_retrieval_evaluation.py --mode <mode_str> [--rank_scope <scope_int>]
   ```
   where:
-  - `--mode` is the mode ['classification', 'retrieval'] in which the evaluation is done,
+  - `--mode` is the mode (either `classification` or `retrieval`) in which the evaluation is done,
   - `--rank_scope` is the scope of the ranking list where a relevant item can be found. It will be ignored in classification mode.
 
