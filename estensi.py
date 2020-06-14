@@ -154,7 +154,7 @@ def main():
         print("Folder to analyze: " + folder_path)
         for video_name in os.listdir(folder_path):
             print("Analysing {}...".format(folder_path + video_name))
-            video_path = folder_path + video_name
+            video_path = os.path.join(folder_path, video_name)
             video = cv2.VideoCapture(video_path)
             if not video.isOpened():
                 print("Error: video {} not opened correctly".format(video_path))
