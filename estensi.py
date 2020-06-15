@@ -2,6 +2,7 @@ import argparse
 import os
 import cv2
 import numpy as np
+
 from estensi.people_detection.detection import Yolo
 import estensi.people_localization.localization as pl
 from estensi.people_localization.localization import PeopleLocator, get_painting_info_from_csv
@@ -51,7 +52,7 @@ def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieva
 
                 draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(0, 0, 255), label="person_{}".format(id))
 
-            cv2.imshow("Painting and people detection", resize_to_fit(output))
+            cv2.imshow("Painting and people detection", resize_to_fit(output, dw=1920, dh=900))
             key = cv2.waitKey(1)
             if key == ord('q'):  # quit
                 break
@@ -77,9 +78,7 @@ def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieva
                         retrievals.append(None)
                         titles.append(None)
                         out = show_on_row(roi, rectify(roi))
-                        h, w, c = out.shape
-                        out = np.hstack((out, could_not_find_matches(h, w, c)))
-                        cv2.imshow("Roi {}".format(i), resize_to_fit(out))
+                        cv2.imshow("Roi {} - Could not find matches and retrieve painting".format(i), resize_to_fit(out, dw=1920, dh=900))
                         continue
 
                     title, author, room = get_painting_info_from_csv(painting_id=rank[0],
@@ -101,9 +100,7 @@ def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieva
                         out = show_on_row(show_on_row(roi, ground_truth), warped)
                     else:
                         out = show_on_row(roi, ground_truth)
-                        h, w, c = out.shape
-                        out = np.hstack((out, could_not_find_matches(h, w, c)))
-                    out = resize_to_fit(out, dw=1920, dh=1080)
+                    out = resize_to_fit(out, dw=1920, dh=900)
                     cv2.imshow("{}".format(title), out)
 
                 # localization
@@ -115,7 +112,7 @@ def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieva
                 cv2.waitKey(-1)
                 for i, (title) in enumerate(titles):
                     if title is None:
-                        cv2.destroyWindow("Roi {}".format(i))
+                        cv2.destroyWindow("Roi {} - Could not find matches and retrieve painting".format(i))
                     else:
                         cv2.destroyWindow("{}".format(title))
 

@@ -141,9 +141,7 @@ def localize_paintings(painting_retrievals, data_path='../../dataset', verbose=F
         print("Cannot find room")
 
         map_img = cv2.imread(os.path.join(data_path, 'map.png'))
-        h, w, c = map_img.shape
-        out_map = np.hstack((map_img, could_not_find_room(h, w//3, c)))
-        out_map = resize_to_fit(out_map)
+        out_map = resize_to_fit(map_img, dw=1920, dh=600)
         cv2.imshow("Cannot find room", out_map)
 
     return room
