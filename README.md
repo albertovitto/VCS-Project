@@ -109,18 +109,18 @@ Optional tasks:
 
 #### Arguments
 ```bash
-estensi.py --video <path/to/video> [--include_steps] [--skip_frames]
+estensi.py --video <path/to/video> --folder <path/to/folder/> [--include_steps] [--skip_frames]
 ```
 where:
-- `--video` targets the video in the dataset to analyze,
+- `--video` targets the video to analyze,
 - `--folder` targets the folder containing different videos to analyze, 
 - `--include_steps` tells the script to show useful debug information,
 - `--frame_skip` makes the script skip frames during analysis. 
 
 #### Keys
-- `R` starts the painting retrieval, rectification and localization tasks. You will see the outputs in new windows and more details in the command line. Press any key to resume.
-- `P` pauses the video, and any buttons resumes.
-- `Q` quits the video. If `--folder` is specified, goes to the next video.
+- Press `R` to start the painting retrieval, rectification and localization tasks. You will see the outputs in new windows and more details in the command line. Press any key to resume.
+- Press `P` to pause the video. Press any key to resume.
+- Press `Q` to quit the video. If `--folder` is specified, goes to the next video.
 
 ## Evaluation
 #### Painting detection
@@ -133,7 +133,34 @@ Otherwise, it will be evaluated with the passed configuration.
   painting_detection_evaluation.py [--param <param_grid_file_path>]
   ```
   where:
-  - `--param` is the path of the json file containing the parameters grid for grid search evaluation.
+  - `--param` is the path of a JSON file containing the parameters grid for grid search evaluation.
+  
+    Example of JSON file:
+    ```bash
+    {
+        "THRESHOLD_BLOCK_SIZE_FACTOR": 50,
+        "THRESHOLD_C": 5,
+
+        "MIN_HULL_AREA_PERCENT_OF_MAX_HULL": 0.08,  # 0.15
+        "MIN_HULL_AREA_PERCENT_OF_IMG": 0.01,
+
+        "MIN_POLY_POINTS": 3,
+        "MIN_HULL_POINTS": 3,
+
+        "MIN_ROTATED_BOX_AREA_PERCENT": 0.7,  # 0.8
+        "MIN_ROTATED_ELLIPSE_AREA_PERCENT": 0.7,  # 0.4
+        "MIN_POLY_AREA_PERCENT": 0.6,  # [0.5:0.6]
+
+        "MAX_RATIO_SIZE": 3,
+
+        "MAX_GRAY_80_PERCENTILE": 200,
+
+        "MIN_VARIANCE": 18,
+
+        "KEEP_PARTIAL": True
+    }
+    ```
+    
 #### Painting retrieval
 - The script will create a `test_set` folder under the `dataset` folder, containing the frames captured from a randomly selected set  of videos.
 - Place the `ground_truth` folder under the `dataset` folder.
@@ -143,5 +170,5 @@ Otherwise, it will be evaluated with the passed configuration.
   ```
   where:
   - `--mode` is the mode (either `classification` or `retrieval`) in which the evaluation is done,
-  - `--rank_scope` is the scope of the ranking list where a relevant item can be found. It will be ignored in classification mode.
+  - `--rank_scope` is the scope of the ranking list where a relevant item can be found. Default value is 5. It will be ignored in classification mode.
 

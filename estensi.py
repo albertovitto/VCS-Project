@@ -155,6 +155,8 @@ def main():
             analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieval, yolo, people_locator)
 
     if args.video is not None:
+        print("Video to analyze: " + args.video)
+        print("Analysing {}...".format(args.video))
         analyze_single_video(args.video, args, db_dir_path, files_dir_path, retrieval, yolo, people_locator)
 
     if args.folder is None and args.video is None:
