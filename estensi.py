@@ -1,7 +1,6 @@
 import argparse
 import os
 import cv2
-import numpy as np
 
 from estensi.people_detection.detection import Yolo
 import estensi.people_localization.localization as pl
@@ -10,7 +9,7 @@ from estensi.painting_rectification.rectification import sift_feature_matching_a
 from estensi.painting_detection.detection import get_bb
 from estensi.painting_rectification.rectification import rectify
 from estensi.painting_retrieval.retrieval import PaintingRetrieval
-from estensi.utils import draw_bb, show_on_row, resize_image, could_not_find_matches, resize_to_fit
+from estensi.utils import draw_bb, show_on_row, resize_to_fit
 
 
 def arg_parse():
@@ -31,7 +30,6 @@ def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieva
     lost_frames = 0
     pos_frames = 0
     skip_frames = args.skip_frames
-    current_frame = 0
 
     while video.isOpened():
         ret, frame = video.read()
@@ -52,7 +50,7 @@ def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieva
 
                 draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(0, 0, 255), label="person_{}".format(id))
 
-            cv2.imshow("Painting and people detection", resize_to_fit(output, dw=1920, dh=900))
+            cv2.imshow("Painting and people detection", resize_to_fit(output))
             key = cv2.waitKey(1)
             if key == ord('q'):  # quit
                 break
@@ -72,52 +70,67 @@ def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieva
                     rank, _ = retrieval.predict(roi, use_extra_check=True)
                     print("Roi {} - rank = {}".format(i, rank))
 
-                    # if retrieval fails
-                    if rank[0] == -1:
+                    retrieval_failed = rank[0] == -1
+                    if retrieval_failed:
                         print("Cannot retrieve painting for Roi {}".format(i))
                         retrievals.append(None)
-                        titles.append(None)
-                        out = show_on_row(roi, rectify(roi))
-                        cv2.imshow("Roi {} - Could not find matches and retrieve painting".format(i), resize_to_fit(out, dw=1920, dh=900))
-                        continue
+                        title = "Roi {} - Could not find matches and retrieve painting".format(i)
+                        titles.append(title)
 
-                    title, author, room = get_painting_info_from_csv(painting_id=rank[0],
-                                                                     path=os.path.join(files_dir_path, "data.csv"))
-                    print("Title: {} \nAuthor: {} \nRoom: {}".format(title, author, room))
-                    retrievals.append(rank[0])
-                    title = title if str(author) == 'nan' else str(title) + " - " + str(author)
-                    title = "Roi {} - {}".format(i, title)
-                    titles.append(title)
+                        warped = rectify(roi)
+                        matches = None
+                    else:
+                        title, author, room = get_painting_info_from_csv(painting_id=rank[0],
+                                                                         path=os.path.join(files_dir_path, "data.csv"))
+                        print("Title: {} \nAuthor: {} \nRoom: {}".format(title, author, room))
+                        retrievals.append(rank[0])
+                        title = title if str(author) == 'nan' else str(title) + " - " + str(author)
+                        title = "Roi {} - {}".format(i, title)
+                        titles.append(title)
 
-                    ground_truth = cv2.imread(os.path.join(db_dir_path, "{:03d}.png".format(rank[0])))
-                    warped, matches = sift_feature_matching_and_homography(roi, ground_truth,
+                        ground_truth = cv2.imread(os.path.join(db_dir_path, "{:03d}.png".format(rank[0])))
+                        warped, matches = sift_feature_matching_and_homography(roi, ground_truth,
                                                                            include_steps=args.include_steps)
 
                     # show output
-                    if args.include_steps and warped is not None:
-                        out = show_on_row(matches, warped)
-                    elif warped is not None:
-                        out = show_on_row(show_on_row(roi, ground_truth), warped)
+                    if retrieval_failed:
+                        if warped is not None:
+                            out = show_on_row(roi, warped)
+                        else:
+                            out = show_on_row(roi)
                     else:
-                        out = show_on_row(roi, ground_truth)
+                        if warped is not None:
+                            if args.include_steps:
+                                out = show_on_row(matches, warped)
+                            else:
+                                out = show_on_row(show_on_row(roi, ground_truth), warped)
+                        else:
+                            out = show_on_row(roi, ground_truth)
+
                     out = resize_to_fit(out, dw=1920, dh=900)
                     cv2.imshow("{}".format(title), out)
 
                 # localization
                 # for id, person_bb in enumerate(people_bbs):
                 #     room = people_locator.localize_person(person_bb, painting_bbs, retrievals, id=id, show_map=True)
-                room = pl.localize_paintings(retrievals, data_path=files_dir_path, verbose=args.include_steps)
+                room, votes, map_img = pl.localize_paintings(retrievals, data_path=files_dir_path, verbose=args.include_steps)
+                if room is not None:
+                    cv2.imshow("Room", resize_to_fit(map_img))
+                    if args.include_steps:
+                        print("Room votes: {}".format(votes))
+                else:
+                    cv2.imshow("Cannot find room", resize_to_fit(map_img))
 
                 print("+-----------------------------------------------+")
+                # destroy windows
                 cv2.waitKey(-1)
-                for i, (title) in enumerate(titles):
-                    if title is None:
-                        cv2.destroyWindow("Roi {} - Could not find matches and retrieve painting".format(i))
-                    else:
-                        cv2.destroyWindow("{}".format(title))
+                for title in titles:
+                    cv2.destroyWindow(title)
 
-                cv2.destroyWindow("Cannot find room")
-                cv2.destroyWindow("Room")
+                if room is not None:
+                    cv2.destroyWindow("Room")
+                else:
+                    cv2.destroyWindow("Cannot find room")
 
             if skip_frames:
                 pos_frames += video.get(cv2.CAP_PROP_FPS)

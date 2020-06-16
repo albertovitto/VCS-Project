@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import copy
 from scipy.spatial import distance
+from estensi.painting_detection.utils import frame_preprocess
+from estensi.painting_detection.constants import conf
 from estensi.painting_rectification.utils import get_four_coordinates
 from estensi.utils import show_on_row, show_on_col, resize_to_fit
 
@@ -42,10 +44,6 @@ def sift_feature_matching_and_homography(roi, img, include_steps=False):
     else:
         print("Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT))
         matchesMask = None
-    draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
-                       singlePointColor=None,
-                       matchesMask=matchesMask,  # draw only inliers
-                       flags=2)
 
     warped = None
     if matchesMask:
@@ -54,40 +52,27 @@ def sift_feature_matching_and_homography(roi, img, include_steps=False):
         roi_h, roi_w, _ = roi.shape
         warped = resize_to_fit(warped, dw=roi_w, dh=roi_h)
 
-    out = cv2.drawMatches(roi, kp_roi, img, kp_img, good, None, **draw_params)
+    matches = None
+    if include_steps:
+        draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
+                           singlePointColor=None,
+                           matchesMask=matchesMask,  # draw only inliers
+                           flags=2)
+        matches = cv2.drawMatches(roi, kp_roi, img, kp_img, good, None, **draw_params)
 
-    return warped, out
+    return warped, matches
 
 
-def rectify(img, include_steps=False):
-    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    blur = cv2.GaussianBlur(gray_img, (5, 5), 0)
-
-    th = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 55, 5)
-
-    morph = cv2.morphologyEx(th, cv2.MORPH_OPEN, np.ones((3, 3)), iterations=1)
-    morph = cv2.morphologyEx(morph, cv2.MORPH_CLOSE, np.ones((5, 5)), iterations=3)
-    morph = cv2.morphologyEx(morph, cv2.MORPH_OPEN, np.ones((5, 5)), iterations=1)
-
+def rectify(img):
+    _, _, morph = frame_preprocess(img, params=conf)
     _, contours, _ = cv2.findContours(morph, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    output = copy.deepcopy(img)
-
+    warped = None
     if len(contours) != 0:
         candidate_hulls = []
-        candidate_polys = []
-
         for i, c in enumerate(contours):
             hull = cv2.convexHull(c)
-            epsilon = (len(c) / (3 * 4)) * 2  # 4 == number of desired points
-            poly = cv2.approxPolyDP(c, epsilon, True)
-
             candidate_hulls.append(hull.reshape(hull.shape[0], hull.shape[2]))
-            candidate_polys.append(poly.reshape(poly.shape[0], poly.shape[2]))
-
-            cv2.drawContours(output, [hull], 0, (0, 0, 255), 2)
-            cv2.drawContours(output, [poly], 0, (255, 0, 0), 2)
 
         hull = sorted(candidate_hulls, key=cv2.contourArea, reverse=True)[0]
 
@@ -108,14 +93,8 @@ def rectify(img, include_steps=False):
             [max_width - 1, max_height - 1],
             [0, max_height - 1]], dtype="float32")
 
-        transform_matrix, _ = cv2.findHomography(rect, dst, cv2.RANSAC, 5.0)
+        transform_matrix, mask = cv2.findHomography(rect, dst, cv2.RANSAC, 5.0)
 
-        result = cv2.warpPerspective(img, transform_matrix, (max_width, max_height))
+        warped = cv2.warpPerspective(img, transform_matrix, (max_width, max_height))
 
-        if include_steps:
-            hstack1 = show_on_row(blur, th)
-            hstack2 = show_on_row(morph, output)
-            output = show_on_col(hstack1, hstack2)
-        else:
-            output = result
-        return output
+    return warped
