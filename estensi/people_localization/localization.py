@@ -118,7 +118,7 @@ class PeopleLocator():
         return room
 
 
-def localize_paintings(painting_retrievals, data_path='../../dataset', verbose=False):
+def localize_paintings(painting_retrievals, data_path='../../dataset'):
     votes = np.zeros(shape=(22))
     for i, pr in enumerate(painting_retrievals):
         # if retrieval failed, skip
@@ -129,19 +129,9 @@ def localize_paintings(painting_retrievals, data_path='../../dataset', verbose=F
 
     room = None
     if np.any(votes):
-        if verbose:
-            print("Votes:")
-            for i, v in enumerate(votes):
-                print("Room #{} = {}".format(i + 1, v))
         room = np.argmax(votes) + 1
         map_img = highlight_map_room(room, map_path=os.path.join(data_path, 'map.png'))
-        cv2.imshow("Room", map_img)
-        # cv2.imshow("Room: {}".format(room), map_img)
     else:
-        print("Cannot find room")
-
         map_img = cv2.imread(os.path.join(data_path, 'map.png'))
-        out_map = resize_to_fit(map_img, dw=1920, dh=600)
-        cv2.imshow("Cannot find room", out_map)
 
-    return room
+    return room, votes, map_img
