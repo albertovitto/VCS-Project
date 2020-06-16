@@ -138,28 +138,15 @@ Otherwise, it will be evaluated with the passed configuration.
     Example of JSON file:
     ```bash
     {
-        "THRESHOLD_BLOCK_SIZE_FACTOR": 50,
-        "THRESHOLD_C": 5,
-
-        "MIN_HULL_AREA_PERCENT_OF_MAX_HULL": 0.08,
-        "MIN_HULL_AREA_PERCENT_OF_IMG": 0.01,
-
-        "MIN_POLY_POINTS": 3,
-        "MIN_HULL_POINTS": 3,
-
-        "MIN_ROTATED_BOX_AREA_PERCENT": 0.7,
-        "MIN_ROTATED_ELLIPSE_AREA_PERCENT": 0.7,
-        "MIN_POLY_AREA_PERCENT": [0.5:0.6],
-
-        "MAX_RATIO_SIZE": 3,
-
-        "MAX_GRAY_80_PERCENTILE": 200,
-
-        "MIN_VARIANCE": 18,
-
-        "KEEP_PARTIAL": True
+        "MIN_ROTATED_BOX_AREA_PERCENT": [0.5, 0.8, 0.9],
+        "MIN_ROTATED_ELLIPSE_AREA_PERCENT": [0.4, 0.6],
+        "MAX_GRAY_80_PERCENTILE": [170, 200],
+        "MIN_VARIANCE": [11, 18],
+        "MIN_HULL_AREA_PERCENT_OF_MAX_HULL": [0.08, 0.15],
+        "THRESHOLD_BLOCK_SIZE_FACTOR": [50, 80]
     }
     ```
+    They key values are taken from `estensi/painting_detection/constants.py`
     
 #### Painting retrieval
 - The script will create a `test_set` folder under the `dataset` folder, containing the frames captured from a randomly selected set  of videos.

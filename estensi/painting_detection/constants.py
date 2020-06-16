@@ -17,7 +17,5 @@ conf = {
 
         "MAX_GRAY_80_PERCENTILE": 200,
 
-        "MIN_VARIANCE": 18,
-
-        "KEEP_PARTIAL": True
+        "MIN_VARIANCE": 18
 }

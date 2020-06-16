@@ -150,8 +150,8 @@ def main():
     if args.folder is not None and os.path.isdir(args.folder) is True:
         print("Folder to analyze: " + args.folder)
         for video_name in os.listdir(args.folder):
-            print("Analysing {}...".format(args.folder + video_name))
             video_path = os.path.join(args.folder, video_name)
+            print("Analysing {}...".format(video_path))
             analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieval, yolo, people_locator)
 
     if args.video is not None:
