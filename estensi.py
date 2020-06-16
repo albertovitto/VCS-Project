@@ -50,7 +50,7 @@ def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieva
 
                 draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(0, 0, 255), label="person_{}".format(id))
 
-            cv2.imshow("Painting and people detection", resize_to_fit(output))
+            cv2.imshow("Painting and people detection", resize_to_fit(output, dw=1920, dh=900))
             key = cv2.waitKey(1)
             if key == ord('q'):  # quit
                 break
@@ -113,7 +113,7 @@ def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieva
                 # localization
                 # for id, person_bb in enumerate(people_bbs):
                 #     room = people_locator.localize_person(person_bb, painting_bbs, retrievals, id=id, show_map=True)
-                room, votes, map_img = pl.localize_paintings(retrievals, data_path=files_dir_path, verbose=args.include_steps)
+                room, votes, map_img = pl.localize_paintings(retrievals, data_path=files_dir_path)
                 if room is not None:
                     cv2.imshow("Room", resize_to_fit(map_img))
                     if args.include_steps:
