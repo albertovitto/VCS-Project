@@ -95,6 +95,7 @@ def rectify(img):
 
         transform_matrix, mask = cv2.findHomography(rect, dst, cv2.RANSAC, 5.0)
 
-        warped = cv2.warpPerspective(img, transform_matrix, (max_width, max_height))
+        if transform_matrix is not None:
+            warped = cv2.warpPerspective(img, transform_matrix, (max_width, max_height))
 
     return warped
