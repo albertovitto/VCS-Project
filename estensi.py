@@ -4,12 +4,22 @@ import cv2
 
 from estensi.people_detection.detection import Yolo
 import estensi.people_localization.localization as pl
-from estensi.people_localization.localization import PeopleLocator, get_painting_info_from_csv
+from estensi.people_localization.localization import get_painting_info_from_csv
 from estensi.painting_rectification.rectification import sift_feature_matching_and_homography
 from estensi.painting_detection.detection import get_bb
 from estensi.painting_rectification.rectification import rectify
 from estensi.painting_retrieval.retrieval import PaintingRetrieval
 from estensi.utils import draw_bb, show_on_row, resize_to_fit
+
+
+def check_positive(value):
+    try:
+        ivalue = int(value)
+    except:
+        raise argparse.ArgumentTypeError("%s is not an integer" % value)
+    if ivalue <= 0:
+        raise argparse.ArgumentTypeError("%s is an invalid positive int value" % value)
+    return ivalue
 
 
 def arg_parse():
@@ -18,11 +28,12 @@ def arg_parse():
     parser.add_argument('--folder', dest='folder', help='path of a folder with different videos', type=str)
     parser.add_argument('--include_steps', dest='include_steps', action='store_true',
                         help='toggles additional screens that show more info (like intermediate steps)')
-    parser.add_argument('--skip_frames', dest='skip_frames', action='store_true', help='toggles frame skip')
+    parser.add_argument('--skip_frames', dest='skip_frames', help='set amunt of frames to skip', type=check_positive,
+                        required=False)
     return parser.parse_args()
 
 
-def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieval, yolo, people_locator):
+def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieval, yolo):
     video = cv2.VideoCapture(video_path)
     if not video.isOpened():
         print("Error opening video {}...".format(video_path))
@@ -90,7 +101,7 @@ def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieva
 
                         ground_truth = cv2.imread(os.path.join(db_dir_path, "{:03d}.png".format(rank[0])))
                         warped, matches = sift_feature_matching_and_homography(roi, ground_truth,
-                                                                           include_steps=args.include_steps)
+                                                                               include_steps=args.include_steps)
 
                     # show output
                     if retrieval_failed:
@@ -111,8 +122,6 @@ def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieva
                     cv2.imshow("{}".format(title), out)
 
                 # localization
-                # for id, person_bb in enumerate(people_bbs):
-                #     room = people_locator.localize_person(person_bb, painting_bbs, retrievals, id=id, show_map=True)
                 room, votes, map_img = pl.localize_paintings(retrievals, data_path=files_dir_path)
                 if room is not None:
                     cv2.imshow("Room", resize_to_fit(map_img))
@@ -133,7 +142,7 @@ def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieva
                     cv2.destroyWindow("Cannot find room")
 
             if skip_frames:
-                pos_frames += video.get(cv2.CAP_PROP_FPS)
+                pos_frames += skip_frames
                 video.set(cv2.CAP_PROP_POS_FRAMES, pos_frames)
         else:
             lost_frames += 1
@@ -157,20 +166,17 @@ def main():
 
     yolo = Yolo(yolo_path=os.path.join(path, "estensi", "people_detection"))
 
-    people_locator = PeopleLocator(distance=pl.CENTER_DISTANCE, weighting=pl.SQRT_AREA, voting=True,
-                                   verbose=args.include_steps, data_path=files_dir_path)
-
     if args.folder is not None and os.path.isdir(args.folder) is True:
         print("Folder to analyze: " + args.folder)
         for video_name in os.listdir(args.folder):
             video_path = os.path.join(args.folder, video_name)
             print("Analysing {}...".format(video_path))
-            analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieval, yolo, people_locator)
+            analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieval, yolo)
 
     if args.video is not None:
         print("Video to analyze: " + args.video)
         print("Analysing {}...".format(args.video))
-        analyze_single_video(args.video, args, db_dir_path, files_dir_path, retrieval, yolo, people_locator)
+        analyze_single_video(args.video, args, db_dir_path, files_dir_path, retrieval, yolo)
 
     if args.folder is None and args.video is None:
         print("Please specify a valid folder or video path")
