@@ -5,7 +5,7 @@ from scipy.spatial import distance
 from estensi.painting_detection.utils import frame_preprocess
 from estensi.painting_detection.constants import conf
 from estensi.painting_rectification.utils import get_four_coordinates
-from estensi.utils import show_on_row, show_on_col, resize_to_fit
+from estensi.utils import resize_to_fit
 
 
 def sift_feature_matching_and_homography(roi, img, include_steps=False):

@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 from estensi.people_localization.utils import get_painting_info_from_csv, highlight_map_room
-from estensi.utils import could_not_find_room, resize_to_fit
+
 # distance
 CENTER_DISTANCE = 0
 
