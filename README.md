@@ -43,20 +43,17 @@ Optional tasks:
 │   ├── ground_truth
 │   │   ├── 000_0.json
 │   │   ├── ...
-│   │   └── 014_9.json
+│   │   └── 014_16.json
 │   ├── img_features_db.npy
 │   ├── map.png
 │   ├── paintings_db
 │   │   ├── 000.png
 │   │   ├── ...
 │   │   └── 094.png
-│   ├── screenshots_3d_model
-│   │   ├── 100916250_542901693059216_8301339564534923264_n.jpg
-│   │   ├── ...
-│   │   └── 92018365_2773046682923472_1923690185153839104_n.jpg
 │   ├── test_set
 │   │   ├── 000_0.png
-│   │   └── ...
+│   │   ├── ...
+│   │   └── 014_16.png
 │   └── videos
 │       ├── 000
 │       │   ├── VIRB0391.MP4
@@ -109,13 +106,14 @@ Optional tasks:
 
 #### Arguments
 ```bash
-estensi.py --video <path/to/video> --folder <path/to/folder/> [--include_steps] [--skip_frames]
+estensi.py --video <path/to/video> --folder <path/to/folder/> --skip_frames <int_number> [--include_steps]
 ```
 where:
-- `--video` targets the video to analyze,
-- `--folder` targets the folder containing different videos to analyze, 
-- `--include_steps` tells the script to show useful debug information,
-- `--frame_skip` makes the script skip frames during analysis. 
+- `--video` targets the video to analyze.
+- `--folder` targets the folder containing different videos to analyze.
+- `--skip_frames` number of frames to skip during analysis, default is 1 (don't skip any frame).
+- `--include_steps` tells the script to show useful debug information.
+
 
 #### Keys
 - Press `R` to start the painting retrieval, rectification and localization tasks. You will see the outputs in new windows and more details in the command line. Press any key to resume.
@@ -159,3 +157,5 @@ Otherwise, it will be evaluated with the passed configuration.
   - `--mode` is the mode (either `classification` or `retrieval`) in which the evaluation is done,
   - `--rank_scope` is the scope of the ranking list where a relevant item can be found. Default value is 5. It will be ignored in classification mode.
 
+#### Disclaimer
+This work has only been tested with PyCharm 2020.1.2 (Professional Edition) as IDE and Windows 10 as OS.
