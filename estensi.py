@@ -143,6 +143,8 @@ def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieva
 
             if skip_frames:
                 pos_frames += skip_frames
+                if pos_frames > video.get(cv2.CAP_PROP_FRAME_COUNT):
+                    break
                 video.set(cv2.CAP_PROP_POS_FRAMES, pos_frames)
         else:
             lost_frames += 1
