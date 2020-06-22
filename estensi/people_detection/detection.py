@@ -167,6 +167,8 @@ class Yolo():
             y2 = int(x[4].item())
             w = x2 - x1
             h = y2 - y1
+            if w * h < 10:
+                continue
             bbs.append((x1, y1, w, h))
 
         if painting_bbs is not None:
