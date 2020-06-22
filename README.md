@@ -161,3 +161,5 @@ Otherwise, it will be evaluated with the passed configuration.
   - `--mode` is the mode (either `classification` or `retrieval`) in which the evaluation is done,
   - `--rank_scope` is the scope of the ranking list where a relevant item can be found. Default value is 5. It will be ignored in classification mode.
 
+#### Disclaimer
+This work has only been tested with PyCharm 2020.1.2 (Professional Edition) as IDE and Windows 10 as OS.
