@@ -110,7 +110,7 @@ def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieva
                         if warped is not None:
                             out = show_on_row(roi, warped)
                         else:
-                            out = show_on_row(roi)
+                            out = roi
                     else:
                         if warped is not None:
                             if args.include_steps:
