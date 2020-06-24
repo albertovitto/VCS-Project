@@ -53,11 +53,13 @@ def analyze_single_video(video_path, args, db_dir_path, files_dir_path, retrieva
             for id, person_bb in enumerate(people_bbs):
                 x, y, w, h = person_bb
                 if args.include_steps:
+                    oy, ox, _ = output.shape
                     fy, fx, _ = frame.shape
-                    x = x // 2 + fx // 2
-                    y = y // 2 + fy // 2
-                    w //= 2
-                    h //= 2
+                    scaling = oy / fy * 0.5
+                    x = int(fx * scaling) + int(x * scaling)
+                    y = int(fy * scaling) + int(y * scaling)
+                    w = int(w * scaling)
+                    h = int(h * scaling)
 
                 draw_bb(output, tl=(x, y), br=(x + w, y + h), color=(0, 0, 255), label="person_{}".format(id))
 
