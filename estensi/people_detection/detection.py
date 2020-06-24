@@ -126,7 +126,7 @@ class Yolo():
 
         return okok_bbs, ko_bbs
 
-    def get_people_bb(self, frame, painting_bbs=None):
+    def get_people_bb(self, frame, painting_bbs=None, confidence_th=0.96):
         img, orig_im, dim = self.prep_image(frame, self.inp_dim)
 
         im_dim = torch.FloatTensor(dim).repeat(1, 2)
@@ -169,18 +169,26 @@ class Yolo():
             h = y2 - y1
             if w * h < 10:
                 continue
+            confidence = x[5].item()
+            if confidence < confidence_th:
+                continue
             bbs.append((x1, y1, w, h))
 
         if painting_bbs is not None:
-            ok_bbs, ko_bbs = self.check_bbs_iop(paintings=painting_bbs, people=bbs)
-            ok_bbs = self.remove_useless_detections(ok_bbs)
-            ok_bbs, ko_bbs = self.discard_bbs(ok_bbs, ko_bbs, threshold=400)
-            self.prev_ok_bbs = ok_bbs
-            self.prev_ko_bbs_buffer.append(ko_bbs)
-            windows_size = 2
-            while len(self.prev_ko_bbs_buffer) > windows_size:
-                self.prev_ko_bbs_buffer.pop(0)
-            return ok_bbs
-        else:
-            self.prev_ok_bbs = []
-            return bbs
+            bbs, _ = self.check_bbs_iop(paintings=painting_bbs, people=bbs)
+            bbs = self.remove_useless_detections(bbs)
+        return bbs
+
+        # if painting_bbs is not None:
+        #     ok_bbs, ko_bbs = self.check_bbs_iop(paintings=painting_bbs, people=bbs)
+        #     ok_bbs = self.remove_useless_detections(ok_bbs)
+        #     ok_bbs, ko_bbs = self.discard_bbs(ok_bbs, ko_bbs, threshold=400)
+        #     self.prev_ok_bbs = ok_bbs
+        #     self.prev_ko_bbs_buffer.append(ko_bbs)
+        #     windows_size = 2
+        #     while len(self.prev_ko_bbs_buffer) > windows_size:
+        #         self.prev_ko_bbs_buffer.pop(0)
+        #     return ok_bbs
+        # else:
+        #     self.prev_ok_bbs = []
+        #     return bbs
