@@ -3,8 +3,7 @@ import numpy as np
 
 
 def frame_preprocess(img, params):
-    alpha, beta = auto_alpha_beta(img)
-    adjusted_img = cv2.convertScaleAbs(img, alpha=alpha, beta=beta)
+    adjusted_img = cv2.convertScaleAbs(img, alpha=2, beta=0)
 
     gray_img = cv2.cvtColor(adjusted_img, cv2.COLOR_BGR2GRAY)
 
@@ -58,27 +57,3 @@ def is_painting(hull, poly, bounding_box, rotated_box, ellipse, img, params):
         return False
 
     return True
-
-
-def auto_alpha_beta(img):
-    # 1 method
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    hsv_planes = cv2.split(hsv)
-    brightness = hsv_planes[2]
-    mean, std = cv2.meanStdDev(brightness)
-
-    beta = std - 10
-    if beta < 0:
-        beta = 0
-
-    alpha = 1.2
-
-    # 2 method
-    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    percent = np.percentile(gray_img, 90)
-    alpha = (255 / percent)
-    beta = 0
-    #beta = beta / 2
-    alpha = 2
-
-    return alpha, beta
