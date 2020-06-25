@@ -50,7 +50,6 @@ def is_painting(hull, poly, bounding_box, rotated_box, ellipse, img, params):
     roi = get_roi(bounding_box, img)
     gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
 
-    print(np.percentile(gray_roi, 80))
     if np.percentile(gray_roi, 80) >= params["MAX_GRAY_80_PERCENTILE"]:
         return False
 
