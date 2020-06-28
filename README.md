@@ -103,7 +103,7 @@ Optional tasks:
 ## Instructions
 - Make sure to have installed all requirements (see `requirements.txt`).
 - Make sure to have installed also the PyTorch requirements, depending from the system (see `torch_requirements.txt` for CUDA version or `torch_cpu_requirements.txt` for CPU version).
-- Place the `dataset` folder at the same level as `estensi.py` and the `estensi` package (make sure to have `paintings_db`, `videos` folders and `data.csv`, `map.png` files inside `datset`).
+- Place the `dataset` folder at the same level as `estensi.py` and the `estensi` package (make sure to have `paintings_db`, `videos`, `data.csv`, and `map.png` inside as shown in the project structure).
 - Place [`yolov3.weights`](https://pjreddie.com/media/files/yolov3.weights) into `estensi/people_detection`.
 
 #### Arguments
@@ -123,8 +123,25 @@ where:
 - Press `Q` to quit the video. If `--folder` is specified, goes to the next video.
 
 ## Evaluation
+Following videos were used for the evaluation phase:
+```bash
+        dataset/videos/000/VIRB0393.MP4
+        dataset/videos/001/GOPR5825.MP4
+        dataset/videos/002/20180206_114720.mp4
+        dataset/videos/003/GOPR1929.MP4
+        dataset/videos/004/IMG_3803.MOV
+        dataset/videos/005/GOPR2051.MP4
+        dataset/videos/006/IMG_9629.MOV
+        dataset/videos/007/IMG_7852.MOV
+        dataset/videos/008/VIRB0420.MP4
+        dataset/videos/009/IMG_2659.MOV
+        dataset/videos/010/VID_20180529_112706.mp4
+        dataset/videos/012/IMG_4087.MOV
+        dataset/videos/013/20180529_112417_ok.mp4
+        dataset/videos/014/VID_20180529_113001.mp4
+```
 #### Painting detection
-- The script will create a `test_set` folder under the `dataset` folder, containing the frames captured from a randomly selected set  of videos.
+- The script will create a `test_set` folder under the `dataset` folder, containing the frames captured from the videos listed above.
 - Place the `ground_truth` folder under the `dataset` folder.
 - If no argument is passed to the script, the test set will be evaluated with the system hyperparameters configuration.
 Otherwise, it will be evaluated with the passed configuration.
@@ -149,7 +166,7 @@ Otherwise, it will be evaluated with the passed configuration.
     They key values are taken from `estensi/painting_detection/constants.py`
     
 #### Painting retrieval
-- The script will create a `test_set` folder under the `dataset` folder, containing the frames captured from a randomly selected set  of videos.
+- The script will create a `test_set` folder under the `dataset` folder, containing the frames captured from the videos listed above.
 - Place the `ground_truth` folder under the `dataset` folder.
 - Run:
   ```bash
