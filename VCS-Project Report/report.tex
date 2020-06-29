@@ -131,7 +131,7 @@ In section \ref{subsec:PaintingDetectionEvaluation} we will show the results of 
     \subcaptionbox{Closing operator.\label{fig:PaintingDetectionClosing}}[0.45\linewidth]{\includegraphics[width=\linewidth]{images/image9.png}} &
     \subcaptionbox{Result.\label{fig:PaintingDetectionResult}}[0.45\linewidth]{\includegraphics[width=\linewidth]{images/image4.png}}
   \end{tabular}
-  \caption{Visualization of the preprocessing pipeline for painting detection.\label{fig:PaintingDetectionImages}}
+  \caption{Visualization of the image processing pipeline for painting detection.\label{fig:PaintingDetectionImages}}
 \end{figure*}
 
 
@@ -256,7 +256,7 @@ However, there are some limitations in performance due to:
 \textbf{Total} &  &  &  &  & \textbf{0.93} &\textbf{ 0.71} & \textbf{0.8} \\
 \end{tabular}
 \end{center}
-\caption{Painting detection results with checks for \textit{not-paintings}, where \textit{P} is precision and \textit{R} is recall}
+\caption{Painting detection results (\textit{IoU}=0.5) with checks for \textit{not-paintings}, where \textit{P} is precision and \textit{R} is recall}
 \label{tab:PaintingDetectionResults1}
 \end{table}
 
@@ -281,7 +281,7 @@ However, there are some limitations in performance due to:
 \textbf{Total} &  &  &  &  & \textbf{0.03} & \textbf{0.92} & \textbf{0.05} \\
 \end{tabular}
 \end{center}
-\caption{Painting detection results without checks for \textit{not-paintings}, where \textit{P} is precision and \textit{R} is recall}
+\caption{Painting detection results (\textit{IoU}=0.5) without checks for \textit{not-paintings}, where \textit{P} is precision and \textit{R} is recall}
 \label{tab:PaintingDetectionResults2}
 \end{table}
 
@@ -330,7 +330,7 @@ As mentioned in section \ref{sec:PaintingRetrieval}, we wanted to address the pr
 \textbf{Total} & \textbf{0.67} & \textbf{0.53} & \textbf{0.76}
 \end{tabular}
 \end{center}
-\caption{Painting retrieval results, where \textit{EM} means elliptical mask.}
+\caption{Painting retrieval results (\textit{rank\_scope}=5), where \textit{EM} means elliptical mask.}
 \label{tab:PaintingRetrievalResults}
 \end{table}
 
