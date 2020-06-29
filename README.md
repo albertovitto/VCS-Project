@@ -104,7 +104,7 @@ Optional tasks:
 - Make sure to have installed all requirements (see `requirements.txt`).
 - Make sure to have installed also the PyTorch requirements, depending from the system (see `torch_requirements.txt` for CUDA version or `torch_cpu_requirements.txt` for CPU version).
 - Place the `dataset` folder at the same level as `estensi.py` and the `estensi` package (make sure to have `paintings_db`, `videos`, `data.csv`, and `map.png` inside as shown in the project structure).
-- Place [`yolov3.weights`](https://pjreddie.com/media/files/yolov3.weights) into `estensi/people_detection`.
+- [Download](https://pjreddie.com/media/files/yolov3.weights) `yolov3.weights` and place it into `estensi/people_detection`.
 
 #### Arguments
 ```bash
