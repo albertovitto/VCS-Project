@@ -113,7 +113,7 @@ For each candidate contour, we obtain the convex hull, the contour approximation
     \item Minimum convex hull area percentage with respect to the widest convex hull found: we discard contours that are too small compared to the widest painting found.
 \end{enumerate}
 
-Figure \ref{fig:PaintingDetectionImages} shows the most meaningful painting detection steps. In section \ref{subsec:PaintingDetectionEvaluation} we will show the results of this approach on the test set mentioned in section \ref{subsec:Dataset}.
+In section \ref{subsec:PaintingDetectionEvaluation} we will show the results of this approach on the test set mentioned in section \ref{subsec:Dataset}.
 
 \begin{figure}[t]
 \begin{center}
@@ -126,12 +126,12 @@ Figure \ref{fig:PaintingDetectionImages} shows the most meaningful painting dete
 \begin{figure*}[]
   \centering
   \begin{tabular}{cc}
-    \subcaptionbox{Brightness, contrast enhancement and smoothing.\label{fig:PaintingDetectionSmoothing}}[0.45\linewidth]{\includegraphics[width=\linewidth]{images/presentation_1.png}} &
-    \subcaptionbox{Adaptive thresholding and closing operator.\label{fig:PaintingDetectionThresholding}}[0.45\linewidth]{\includegraphics[width=\linewidth]{images/presentation_3.png}} \\
-    \subcaptionbox{Result without checks for \textit{not-paintings}.\label{fig:PaintingDetectionClosing}}[0.45\linewidth]{\includegraphics[width=\linewidth]{images/presentation_4.png}} &
-    \subcaptionbox{Result with checks for \textit{not-paintings}.\label{fig:PaintingDetectionResult}}[0.45\linewidth]{\includegraphics[width=\linewidth]{images/presentation_5.png}}
+    \subcaptionbox{Brightness, contrast enhancement and smoothing.\label{fig:PaintingDetectionSmoothing}}[0.45\linewidth]{\includegraphics[width=\linewidth]{images/image8.png}} &
+    \subcaptionbox{Adaptive thresholding.\label{fig:PaintingDetectionThresholding}}[0.45\linewidth]{\includegraphics[width=\linewidth]{images/image6.png}} \\
+    \subcaptionbox{Closing operator.\label{fig:PaintingDetectionClosing}}[0.45\linewidth]{\includegraphics[width=\linewidth]{images/image9.png}} &
+    \subcaptionbox{Result.\label{fig:PaintingDetectionResult}}[0.45\linewidth]{\includegraphics[width=\linewidth]{images/image4.png}}
   \end{tabular}
-  \caption{Visualization of the image processing pipeline for painting detection.\label{fig:PaintingDetectionImages}}
+  \caption{Visualization of the preprocessing pipeline for painting detection.\label{fig:PaintingDetectionImages}}
 \end{figure*}
 
 
@@ -159,7 +159,7 @@ In section \ref{subsec:PaintingRetrievalEvaluation}, we will show the results of
 \section{Painting rectification}
 \label{sec:PaintingRectification}
 By rectification we mean the application of a perspective transformation of a painting detection such as to show the painting in its entirety from a frontal point of view. To solve this task in the best way, it would have been necessary to have the parameters of the cameras used to record the videos of the dataset, in order to extrapolate the real dimensions of the identified paintings, correct the distortion and be able to reconstruct the image from the rectified painting. However, the parameters of the cameras were not included in the dataset, therefore it is difficult to reconstruct the aspect ratio of the original painting. Furthermore, the distortion correction would never have been uniform for all the videos in the dataset, given that they come from different sources and that in production stage there may be an unknown camera. Therefore we have decided to ignore the problem, since the method we are going to illustrate works very well even with distorted images.
-Hence, we have chosen to rectify the detected painting only after recovering the corresponding original painting from the images dataset: in this way we have the original proportions of the painting so we can apply a perspective transformation. To obtain the transformation matrix, we calculated two feature vectors using SIFT: one over the recovered painting, the other over the detected painting from the video and we used \textit{Fast Library for Approximate Nearest Neighbors} (FLANN) implemented in OpenCV as a matcher between the SIFT descriptors, then apply the Lowe's ratio test to leave out less reliable matches. Next we extracted the coordinates of the key points both in the detection and in the original image to obtain the projection matrix with \texttt{findHomography} \cite{findHomography}, which internally uses RANSAC \cite{10.1145/358669.358692} to exclude outliers. In this way the outputs are not only corrected, but also proportionate and exclude the frame of a painting if the image in the dataset doesn't have it.
+Hence, we have chosen to rectify the detected painting only after recovering the corresponding original painting from the images dataset: in this way we have the original proportions of the painting so we can apply a perspective transformation. To obtain the transformation matrix, we calculated two feature vectors using SIFT: one over the recovered painting, the other over the detected painting from the video and we used \textit{Fast Library for Approximate Nearest Neighbors} (FLANN) implemented in OpenCV as a matcher between the SIFT descriptors, then apply the Lowe's ratio test to leave out less reliable matches. Next we extracted the coordinates of the key points both in the detection and in the original image and applied RANSAC \cite{10.1145/358669.358692} to obtain the projection matrix. In this way the outputs are not only corrected, but also proportionate and exclude the frame of a painting if the image in the dataset doesn't have it.
 
 Our approach is very effective, but it assumes that the retrieval is correct: however, often it fails due to the lack of the corresponding images in the dataset. For this reason in these cases we used a simpler approach that doesn’t keep proportions but tries to rectify.
 We apply a preprocess pipeline similar to the one described in section \ref{sec:PaintingDetection} for painting detection on the ROI image. We find the contours and keep only the biggest one in terms of area. We assume that it corresponds to the painting contour. Then, we obtain the coordinates of the top-left, top-right, bottom-right and bottom-left points from the contour points list. 
@@ -199,15 +199,15 @@ This method works obviously better on rectangular paintings, since for elliptica
 \label{fig:PeopleDetection}
 \end{figure*}
 
-Some videos in the dataset also include visitors: our goal is to identify people and indicate in which room of the museum they are. We decided to use YOLO \cite{redmon2015unified}, a multi-class network for detection, one of which is people. It would have been difficult to identify people in the same way in which we identified the paintings (by applying classic image processing), as these have a typically known geometric shape, are static and always present only one point of view. Instead people could be framed in part and with different profiles. Hence the choice to opt for a pre-trained neural network. The model we used is able to recognize up to 80 classes, but for our purpose we have taken into consideration only the detection of the \textit{person} class.
+Some videos in the dataset also include visitors: our goal is to identify people and indicate which room in the museum they are in. We decided to use YOLO \cite{redmon2015unified}, a multi-class network for detection, one of which is people. It would have been difficult to identify people in the same way in which we identified the paintings (by applying classic image processing), as these have a typically known geometric shape, are static and always present only one point of view. Instead people could be framed in part, present themselves with different profiles, etc. Hence the choice to opt for a pre-trained neural network. The model we use is able to recognize up to 80 classes, but for our use we have taken into consideration only the detection of people.
 
-The problem with this approach relates to the fact that the detection of paintings and people use different methodologies and do not communicate with each other: it may happen that the neural network identifies the people depicted in the paintings as real people, thus creating false positives. To overcome this problem we have added checks on the position of the person's ROI with respect to the ROIs of the panels: for each identified person we verify if the area of the person's ROI is totally included in the area of a painting's ROI and if true we discard the detection of the person.
+The problem with this approach relates to the fact that the detection of paintings and people use different methodologies and do not communicate with each other: It may happen that the neural network identifies the people depicted in the paintings as real people, thus creating false positives. To overcome this problem we have added checks on the position of the person's ROI with respect to the ROIs of the panels: for each identified person we verify if the area of the person's ROI is totally included in the area of a painting's ROI and if true we discard the detection of the person.
 \begin{equation}
 \label{eq:DiscardPerson}
 Area_{person} \cap Area_{painting} = Area_{person}
 \end{equation}
 
-This approach works in most cases, but it's based on the assumption that the system correctly identifies the paintings: if one of those is not recognized, potentially the system will output the people depicted within it. Another problem is that YOLO sometimes recognizes statues as people. So, in order to have better results we applied a threshold to the confidence score on each person detected. Given that both statues and people depicted inside the paintings are very realistic, sometimes those detections have a confidence varying from 0.40 to 0.95. Instead, a real person detection usually has a score higher than 0.97, so we applied a threshold of 0.96. However, YOLO's confidence is still high when we have colored and realistic statues (as in figure \ref{fig:PeopleDetectionError})
+This approach works in most cases, but is based on the assumption that the system correctly identifies the paintings: if one of those is not recognized, potentially the system will output the people depicted within it. Another problem is that YOLO sometimes recognizes statues as person. So, in order to have better results we applied a threshold to the confidence score on each person detection. Given that both statues and people depicted inside the paintings are very realistic, sometimes those detection have a confidence varying from 0.40 to 0.95. Instead, a real people detection usually has a score higher than 0.97, so we applied a threshold of 0.96. However, YOLO's confidence is still high when we have colored and realistic statues (as in figure \ref{fig:PeopleDetectionError})
 
 \begin{figure}[t]
 \begin{center}
@@ -256,7 +256,7 @@ However, there are some limitations in performance due to:
 \textbf{Total} &  &  &  &  & \textbf{0.93} &\textbf{ 0.71} & \textbf{0.8} \\
 \end{tabular}
 \end{center}
-\caption{Painting detection results (\texttt{IoU = 0.5}) with checks for \textit{not-paintings}, where \textit{P} is precision and \textit{R} is recall}
+\caption{Painting detection results with checks for \textit{not-paintings}, where \textit{P} is precision and \textit{R} is recall}
 \label{tab:PaintingDetectionResults1}
 \end{table}
 
@@ -281,7 +281,7 @@ However, there are some limitations in performance due to:
 \textbf{Total} &  &  &  &  & \textbf{0.03} & \textbf{0.92} & \textbf{0.05} \\
 \end{tabular}
 \end{center}
-\caption{Painting detection results (\texttt{IoU = 0.5}) without checks for \textit{not-paintings}, where \textit{P} is precision and \textit{R} is recall}
+\caption{Painting detection results without checks for \textit{not-paintings}, where \textit{P} is precision and \textit{R} is recall}
 \label{tab:PaintingDetectionResults2}
 \end{table}
 
@@ -330,7 +330,7 @@ As mentioned in section \ref{sec:PaintingRetrieval}, we wanted to address the pr
 \textbf{Total} & \textbf{0.67} & \textbf{0.53} & \textbf{0.76}
 \end{tabular}
 \end{center}
-\caption{Painting retrieval results (\texttt{rank\_scope = 5}), where \textit{EM} means elliptical mask.}
+\caption{Painting retrieval results, where \textit{EM} means elliptical mask.}
 \label{tab:PaintingRetrievalResults}
 \end{table}
 
