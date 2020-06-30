@@ -124,22 +124,26 @@ where:
 
 ## Evaluation
 Following videos were used for the evaluation phase:
-```bash
-        dataset/videos/000/VIRB0393.MP4
-        dataset/videos/001/GOPR5825.MP4
-        dataset/videos/002/20180206_114720.mp4
-        dataset/videos/003/GOPR1929.MP4
-        dataset/videos/004/IMG_3803.MOV
-        dataset/videos/005/GOPR2051.MP4
-        dataset/videos/006/IMG_9629.MOV
-        dataset/videos/007/IMG_7852.MOV
-        dataset/videos/008/VIRB0420.MP4
-        dataset/videos/009/IMG_2659.MOV
-        dataset/videos/010/VID_20180529_112706.mp4
-        dataset/videos/012/IMG_4087.MOV
-        dataset/videos/013/20180529_112417_ok.mp4
-        dataset/videos/014/VID_20180529_113001.mp4
-```
+
+|Folder|Video|
+|------|-----|
+|000|VIRB0393.MP4|
+|001|GOPR5825.MP4|
+|002|20180206_114720.mp4|
+|003|GOPR1929.MP4|
+|004|IMG_3803.MOV|
+|005|GOPR2051.MP4|
+|006|IMG_9629.MOV|
+|007|IMG_7852.MOV|
+|008|VIRB0420.MP4|
+|009|IMG_2659.MOV|
+|010|VID_20180529_112706.mp4|
+|012|IMG_4087.MOV|
+|013|20180529_112417_ok.mp4|
+|014|VID_20180529_113001.mp4|
+
+To get the same results as in the report, [download](https://unimore365-my.sharepoint.com/:u:/g/personal/214372_unimore_it/EbNF3I47K1JNlGtb-RhJ8q8B7M8DPngCLKKY8r3qWbpeOw?e=HMv6Mo) this test set.
+
 #### Painting detection
 - The script will create a `test_set` folder under the `dataset` folder, containing the frames captured from the videos listed above.
 - Place the `ground_truth` folder under the `dataset` folder.
