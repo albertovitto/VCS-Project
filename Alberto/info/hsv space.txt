@@ -1,9 +1,0 @@
-get tones of a color in hsv:
-
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    wall_color_bgr = np.uint8([[[112, 144, 157]]])
-    wall_color_hsv = cv2.cvtColor(wall_color_bgr, cv2.COLOR_BGR2HSV)
-    h, s, v = wall_color_hsv[0][0][0], wall_color_hsv[0][0][1], wall_color_hsv[0][0][2]
-    lower_wall_color_hsv = np.array([h-3, 0, 0])
-    upper_wall_color_hsv = np.array([h+3, 255, 255])
-    mask = cv2.inRange(hsv, lower_wall_color_hsv, upper_wall_color_hsv)

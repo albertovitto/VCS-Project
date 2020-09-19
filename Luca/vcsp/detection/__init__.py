@@ -1,1 +1,0 @@
-from .detect_paiting import detect_painting
