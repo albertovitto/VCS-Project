@@ -7,7 +7,7 @@ This project was developed as part of the Vision and Cognitive Systems course as
 | ------------------- | ----------------------------------------------------------------- |
 | Luca Denti          | [`211805@studenti.unimore.it`](mailto:211805@studenti.unimore.it) |
 | Cristian Mercadante | [`213808@studenti.unimore.it`](mailto:213808@studenti.unimore.it) |
-| Alberto Vitto       | [`214372@studenti.unimore.it`](mailto:214372@studenti.unimore.it) |
+| Alberto Vitto       | [`albertovitto@outlook.com`](mailto:albertovitto@outlook.com) |
 
 
 ## Tasks
